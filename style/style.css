@@ -12,6 +12,9 @@ body{
   font-weight: 300;
   padding-left: 5%;
   padding-right: 5%;
+  margin: 0;
+  padding-top: 3%;
+  background-color: #fffff5;
 }
 h3{
   text-align: center;
