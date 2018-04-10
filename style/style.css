@@ -22,10 +22,10 @@ h3{
 a{
   text-decoration: none;
 }
-a:link{
+a:visited{
   color: #2693d6;
 }
-a:visited{
+a:link{
   color: #26d6d2;
 }
 a:hover{
