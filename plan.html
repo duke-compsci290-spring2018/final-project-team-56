@@ -21,12 +21,14 @@
     mean, median, and quartiles. This feature is a good introduction to the potential predictors that may influence a congressperson's reelection rate. The predictors we plan to explore include
       party alignment, gender, age, sources of donations, home state, and voter population characteristics. Here is a <a href="https://theunitedstates.io/congress-legislators/legislators-current.json">JSON file</a> with data about current US legislators
       that we will use.
+      For the user to execute this feature, they will specify which analysis they would like to run and the dataset that they would like to run it on. The user could also upload their own dataset if they want to. All datasets would be stored on firebase
+       and user given datasets would be stored under the users' account (some form of permission based access) on firebase. From there, a backend manager class will run and execute the specific data scripts to generate a result that would then be shown visually to the user.
     </p>
       <li>Data Visualization</li>
       <p>For this feature, we are planning to use the VisJS library to help with building an interactive and visual representation of the data. The user will have to specify which kind of visualization
-      that they would want the app to run and the user will have to upload a correctly formatted dataset.</p>
+      that they would want the app to run and the user will have to upload a correctly formatted dataset or choose a preexisting dataset. The interactive visuals will probably be opened in a new page to keep the webpage as simple and light as possible.</p>
       <li>Data Correlation</li>
-      <p>This is a standard feature that would come with the overall data analysis. If a user would like to look at more specific correlation values between objects within the dataset, they would use this feature.</p>
+      <p>This is a standard feature that would come with the overall data analysis. If a user would like to look at more specific correlation values between objects within the dataset, they would use this feature. These settings specified would then be sent to the manager class to execute the correct script.</p>
     </ul>
     <h3>Technologies</h3>
     <ul>
