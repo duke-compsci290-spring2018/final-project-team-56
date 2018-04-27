@@ -2,7 +2,10 @@
 // (runtime-only or standalone) has been set in webpack.base.conf with an alias.
 import Vue from 'vue'
 import App from './App'
-require('../node_modules/bootstrap/dist/css/bootstrap.css')
+require('bootstrap')
+import 'bootstrap/dist/css/bootstrap.css'
+var $ = require('jquery')
+window.$ = $;
 Vue.config.productionTip = false
 
 new Vue({
@@ -10,5 +13,3 @@ new Vue({
   components: { App },
   template: '<App/>'
 })
-
-// dear ta, i have a small penis - harry wang
