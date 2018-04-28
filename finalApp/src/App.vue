@@ -8,27 +8,11 @@
             </div>
             <div v-else>
                 <button v-on:click="load" class="btn btn-primary">Load Data</button>
-                <button v-on:click="getLocation" class="btn btn-primary">Get Location</button>
                 <button v-on:click="legislatorsGraph" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Network Graph</button>
                 <button v-on:click="ispDonations" class="btn btn-primary">ISP Donations</button>
                 <!-- <wheel></wheel> -->
-                <br> <br>
-                <div id="myLoc" v-if="showMap">
-                    <gmap-map
-                    :center="center"
-                    :zoom="6"
-                    style="height: 480px; width: 50%;"
-                    >
-                    <gmap-marker
-                    :position="center"
-                    :clickable="true"
-                    ></gmap-marker>
-                </gmap-map>
-
-                <button v-on:click="loadcgData" class="btn btn-primary">ur cg</button>
-            </div>
             <!-- shit goes here -->
-        </div>
+            </div>
         <!-- Modal -->
         <div class="modal fade" id="myModal" role="dialog">
             <div class="modal-dialog">
@@ -54,14 +38,43 @@
             </div>
         </div>
     </header>
+    <body>
+        <div class="container-fluid">
+            <div class="row justify-content-md-center">
+                    <div v-if="showMap" class="col-lg-8 col-md-6 col-sm-12">
+                        <gmap-map
+                            :center="center"
+                            :zoom="6"
+                            style="height: 480px;"
+                            >
+                            <gmap-marker
+                                v-for="(m, index) in markers"
+                                :key="index"
+                                :position="m.position"
+                                :clickable="true"
+                                @click="loadcgData(m)"
+                            ></gmap-marker>
+                        </gmap-map>
+                    </div>
+                    <div v-if="showMap" class="col-lg-4 col-md-6 col-sm-12">
+                        <cg-info
+                            :myState="myState"
+                            :myReps="myReps">
+                        </cg-info>
+                    </div>
+            </div>
+        </div>
+    </body>
+
 </div>
 </template>
 
 <script>
 import * as d3 from 'd3'
 import request from 'request';
-import numerical from './components/numerical'
+// import numerical from './components/numerical'
 import donations from './components/donations'
+import cgInfo from './components/cgInfo'
 
 var firebase = require('firebase');
 var vis = require('vis')
@@ -95,12 +108,16 @@ export default {
                 lat: '',
                 lng: ''
             },
-            showMap: false
+            showMap: false,
+            myState: '',
+            myReps: [],
+            markers: []
         }
     },
     components: {
         // wheel
-        donations
+        donations,
+        cgInfo
     },
     mounted: function () {
         var vm = this;
@@ -115,161 +132,171 @@ export default {
         // Get location of user
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(function(position) {
-                // console.log(position.coords);
                 vm.center.lat = position.coords.latitude;
                 vm.center.lng = position.coords.longitude;
                 // console.log(vm.center);
                 vm.showMap = true;
+                // console.log("lat " + vm.center.lat);
+                // console.log("lng " + vm.center.lng);
+                vm.markers.push({
+                    position: { lat: vm.center.lat, lng: vm.center.lng }
+                })
+                console.log(vm.markers);
             }
         )
-    } else {
-        console.log("Geolocation is not supported by browser");
-    }
-    // Load user's senator based on location
-},
-methods: {
-    load() {
-        var vm = this;
-        var cols = [];
-        var entries = d3.entries(vm.legs[0]);       // considering first entry only for column names
-        for (var k = 0; k < entries.length; k++) {
-            cols.push(entries[k].key); // column name
-            // how to interpret birthdays -- specific to legs
-            if (entries[k].key == "birthday") {
-                var birthday = Date.parse(entries[k].value);
-                var age = this.calculateAge(birthday);
-                entries[k].value = age;
+        } else {
+            console.log("Geolocation is not supported by browser");
+        }
+    },
+    methods: {
+        load() {
+            var vm = this;
+            var cols = [];
+            var entries = d3.entries(vm.legs[0]);       // considering first entry only for column names
+            for (var k = 0; k < entries.length; k++) {
+                cols.push(entries[k].key); // column name
+                // how to interpret birthdays -- specific to legs
+                if (entries[k].key == "birthday") {
+                    var birthday = Date.parse(entries[k].value);
+                    var age = this.calculateAge(birthday);
+                    entries[k].value = age;
+                }
+                if (isNaN(entries[k].value)) {  // string --> categorical
+                    this.categorical.push(entries[k]);
+                } else {
+                    this.numerical.push(entries[k]);
+                }
+            }/*
+            for (var i = 0; i < this.categorical.length; i++) {
+                console.log("categorical var: " + this.categorical[i].key);
             }
-            if (isNaN(entries[k].value)) {  // string --> categorical
-                this.categorical.push(entries[k]);
-            } else {
-                this.numerical.push(entries[k]);
+            for (var i = 0; i < this.numerical.length; i++) {
+                console.log("numerical var: " + this.numerical[i].key);
+            }*/
+            for (var i = 0; i < this.legs.length; i++) {
+                this.legs[i].age = this.calculateAge(Date.parse(this.legs[i].birthday));
+                //console.log(this.calculateAge(Date.parse(this.legs[i].birthday)));
             }
-        }
-
-        for (var i = 0; i < this.categorical.length; i++) {
-            console.log("categorical var: " + this.categorical[i].key);
-        }
-        for (var i = 0; i < this.numerical.length; i++) {
-            console.log("numerical var: " + this.numerical[i].key);
-        }
-        for (var i = 0; i < this.legs.length; i++) {
-            this.legs[i].age = this.calculateAge(Date.parse(this.legs[i].birthday));
-            //console.log(this.calculateAge(Date.parse(this.legs[i].birthday)));
-        }
-        for (var i = 0; i < this.legs.length; i++) {
-            this.legs[i].age = this.calculateAge(Date.parse(this.legs[i].birthday));
-            //console.log(this.calculateAge(Date.parse(this.legs[i].birthday)));
-            for (var property in this.legs[0]) {
-                if (this.legs[i][property] == "") {
-                    console.log(this.legs[i] + " is missing property " + property);
-                    // TODO: ignore this property in data analysis
+            for (var i = 0; i < this.legs.length; i++) {
+                this.legs[i].age = this.calculateAge(Date.parse(this.legs[i].birthday));
+                //console.log(this.calculateAge(Date.parse(this.legs[i].birthday)));
+                for (var property in this.legs[0]) {
+                    if (this.legs[i][property] == "") {
+                        console.log(this.legs[i] + " is missing property " + property);
+                        // TODO: ignore this property in data analysis
+                    }
                 }
             }
-        }
-    },
-    getLocation() {
-        // request("https://ipinfo.io", function(error, response, body) {
-        //   console.log(JSON.stringify(response, null, 4));
-        //   // console.log(JSON.parse(body));
-        //   // console.log("city " + response.city);
-        //   // console.log("state " + response.region)
-        // }, "jsonp");
-        //console.log(this.legs[0]);
-        //firebase.database().ref("legs").set(this.legs);
-    },
-    calculateAge(birthday) { // birthday is a date
-        var ageDifMs = Date.now() - birthday;
-        var ageDate = new Date(ageDifMs); // miliseconds from epoch
-        return Math.abs(ageDate.getUTCFullYear() - 1970);
-    },
-    generateNumericalSummary() {
-        var header;
-        var temp = {};
-        console.log(this.numerical.length);
-        for (var k = 0; k < this.numerical.length; k++) {
-            header = this.numerical[k];
-            console.log(header);
-            temp.header = d3.min(this.legs, function(d) { return d.header; });
-        }
-        //temp.age = ,//temp.height
-        // numSum is array of objects: mean, med, etc.
-        this.numSum.push(temp);
-        console.log(this.numSum);
-    },
-    legislatorsGraph(){
-        if(!this.showData){
-            this.showData = true;
-            this.nodes = new vis.DataSet([
-                {id: 'Congress', label: 'Congress'},
-                {id: 'House', label: 'House'},
-                {id: 'Senate', label: 'Senate'}
-            ]);
-
-            // create an array with edges
-            this.edges = new vis.DataSet([
-                {from: 'Congress', to: 'House'},
-                {from: 'Congress', to: 'Senate'}
-            ]);
-
-            for (var i = 0; i < this.legs.length; i++){
-                var name = this.legs[i].first_name + " " + this.legs[i].last_name;
-                this.nodes.add([
-                    {id: name, label: name, cid: this.legs[i].party, group: this.legs[i].party}
+        },
+        calculateAge(birthday) { // birthday is a date
+            var ageDifMs = Date.now() - birthday;
+            var ageDate = new Date(ageDifMs); // miliseconds from epoch
+            return Math.abs(ageDate.getUTCFullYear() - 1970);
+        },
+        generateNumericalSummary() {
+            var header;
+            var temp = {};
+            console.log(this.numerical.length);
+            for (var k = 0; k < this.numerical.length; k++) {
+                header = this.numerical[k];
+                console.log(header);
+                temp.header = d3.min(this.legs, function(d) { return d.header; });
+            }
+            //temp.age = ,//temp.height
+            // numSum is array of objects: mean, med, etc.
+            this.numSum.push(temp);
+            console.log(this.numSum);
+        },
+        legislatorsGraph(){
+            if(!this.showData){
+                this.showData = true;
+                this.nodes = new vis.DataSet([
+                    {id: 'Congress', label: 'Congress'},
+                    {id: 'House', label: 'House'},
+                    {id: 'Senate', label: 'Senate'}
                 ]);
-                if(this.legs[i].type == "rep"){
-                    this.edges.add([
-                        {from: 'House', to: name}
+
+                // create an array with edges
+                this.edges = new vis.DataSet([
+                    {from: 'Congress', to: 'House'},
+                    {from: 'Congress', to: 'Senate'}
+                ]);
+
+                for (var i = 0; i < this.legs.length; i++){
+                    var name = this.legs[i].first_name + " " + this.legs[i].last_name;
+                    this.nodes.add([
+                        {id: name, label: name, cid: this.legs[i].party, group: this.legs[i].party}
                     ]);
-                }else{
-                    this.edges.add([
-                        {from: 'Senate', to: name}
-                    ]);
+                    if(this.legs[i].type == "rep"){
+                        this.edges.add([
+                            {from: 'House', to: name}
+                        ]);
+                    }else{
+                        this.edges.add([
+                            {from: 'Senate', to: name}
+                        ]);
+                    }
                 }
+
+                // create a network
+                var container = document.getElementById('mynetwork');
+                container.style.visibility = "visible";
+                // provide the data in the vis format
+                var data = {
+                    nodes: this.nodes,
+                    edges: this.edges
+                };
+                var options = {
+                    groups:{
+                        Democrat: {color: {background: "blue"}},
+                        Republican: {color: {background: "red"}, shape:"square"},
+                        Independent: {color: {background: "yellow"}, shape:"diamond"}
+                    },
+                    layout:{
+                        improvedLayout: false
+                    }
+                };
+
+                // initialize your network!
+                var network = new vis.Network(container, data, options);
             }
-
-            // create a network
-            var container = document.getElementById('mynetwork');
-            container.style.visibility = "visible";
-            // provide the data in the vis format
-            var data = {
-                nodes: this.nodes,
-                edges: this.edges
-            };
-            var options = {
-                groups:{
-                    Democrat: {color: {background: "blue"}},
-                    Republican: {color: {background: "red"}, shape:"square"},
-                    Independent: {color: {background: "yellow"}, shape:"diamond"}
-                },
-                layout:{
-                    improvedLayout: false
+        },
+        ispDonations() {
+            //saving isp dataset to firebase
+            //firebase.database().ref("isp").set(this.isp);
+        },
+        loadcgData(marker) {
+            // this.markers.push({
+            //     position: { lat: this.center.lat, lng: this.center.lng }
+            // })
+            var state;
+            fetch("https://maps.googleapis.com/maps/api/geocode/json?latlng="+marker.position.lat+","+marker.position.lng+"&key=AIzaSyCotQCA476JOVJ87et877SGKGFI3C840Ac").then(response => response.json())
+            .then(data => {
+                this.myState = data.results[6].address_components[1];
+                state = this.myState.short_name;
+                for (var i = 0; i < this.legs.length; i++) {
+                    if (this.legs[i].state == state) {
+                        this.myReps.push(this.legs[i]);
+                    }
                 }
-            };
-
-            // initialize your network!
-            var network = new vis.Network(container, data, options);
+                console.log(this.myReps);
+            })
+            .catch(error => console.log(error));
+        },
+        addMarker() {
+            this.markers.push({
+                position: { lat: this.currentPlace.geometry.location.lat(), lng: this.currentPlace.geometry.location.lng() }
+            })
         }
-    },
-    ispDonations() {
-        //saving isp dataset to firebase
-        //firebase.database().ref("isp").set(this.isp);
-    },
-    loadcgData() {
-        console.log("my lat " + this.center.lat);
-        console.log("my long " + this.center.lng);
-        fetch("https://maps.googleapis.com/maps/api/geocode/json?latlng="+this.center.lat+","+this.center.lng+"&key=AIzaSyCotQCA476JOVJ87et877SGKGFI3C840Ac").then(response => response.json())
-        .then(data => {
-            console.log(data)
-        })
-        .catch(error => console.log(error))
     }
-}
 }
 </script>
 
 <style>
 @import url(http://fonts.googleapis.com/css?family=Roboto);
+.vue-map-container{
+    width: 100%;
+}
 #form{
     display: table-cell;
     vertical-align: middle;
