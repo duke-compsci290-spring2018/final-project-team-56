@@ -36,14 +36,18 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h4 v-if="!signedIn" class="modal-title">Login</h4>
-                        <h4 v-if="showData" class="modal-title">Network Graph of Congress</h4>
+                        <div v-if="showData">
+                          <h4 class="modal-title">Network Graph of Congress</h4>
+                          <button v-on:click="updateCluster" class="btn btn-outline-primary">Cluster by State</button>
+                        </div>
                     </div>
                     <div class="modal-body">
                         <div v-if="!signedIn" id="form">
-                            <label for="email">Email</label>
-                            <input id="email" class="input" type="text" v-model="email">
-                            <label for="password">Password</label>
-                            <input id="password" class="input" type="password" v-model="password">
+                            <input id="email" class="inputLogin" type="text" v-model="email" placeholder="Email"><br>
+                            <input id="password" class="inputLogin" type="password" v-model="password" placeholder="Password"><br>
+                            <button v-on:click="login" class="btn btn-outline-primary">Login</button>
+                            <button v-on:click="register" class="btn btn-outline-primary">Register</button>
+                            <button v-on:click="guestAccess" class="btn btn-outline-primary" data-dismiss="modal">Guest</button>
                         </div>
                         <div v-if="signedIn" id="mynetwork" class="network"></div>
                     </div>
@@ -80,15 +84,26 @@ export default {
     name: 'App',
     data() {
         return {
+            users: [
+              {email: 'h', password: 'h', access: 'User'},
+              {email: 'z', password: 'z', access: 'Admin'}
+            ],
+            admin: false,
+            guest: false,
+            user: false,
             legs: [],
             categorical: [],
             numerical: [],
             numSum: [],
-            signedIn: true,
+            signedIn: false,
             showData: false,
             email: '',
             password: '',
             isp: [],
+            sponsoreshipH: [],
+            sponsoreshipS: [],
+            networkGraph: '',
+            data:'', //this and networkgraph are all for updating the network graph
             nodes: '',
             edges: '',
             center: {
@@ -112,7 +127,15 @@ export default {
             vm.isp.push(data);
             console.log("isp");
         });
-        
+        d3.csv("https://raw.githubusercontent.com/duke-compsci290-spring2018/final-project-team-56/master/finalApp/data/sponsorshipanalysis_h.csv", function(data){
+            vm.sponsoreshipH.push(data);
+            console.log("sponsH");
+        });
+        d3.csv("https://raw.githubusercontent.com/duke-compsci290-spring2018/final-project-team-56/master/finalApp/data/sponsorshipanalysis_s.csv", function(data){
+            vm.sponsoreshipS.push(data);
+            console.log("sponsS");
+        });
+
         // Get location of user
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(function(position) {
@@ -129,6 +152,19 @@ export default {
     // Load user's senator based on location
 },
 methods: {
+    login() {
+      //determine if user or Admin
+      this.user = true; //this.admin = true
+      this.signedIn = true;
+    },
+    register() {
+      this.user = true;
+      this.signedIn = true;
+    },
+    guestAccess() {
+      this.guest = true;
+      this.signedIn = true;
+    },
     load() {
         var vm = this;
         var cols = [];
@@ -170,6 +206,7 @@ methods: {
         }
     },
     getLocation() {
+      console.log(this.legs[0]);
         // request("https://ipinfo.io", function(error, response, body) {
         //   console.log(JSON.stringify(response, null, 4));
         //   // console.log(JSON.parse(body));
@@ -216,7 +253,7 @@ methods: {
             for (var i = 0; i < this.legs.length; i++){
                 var name = this.legs[i].first_name + " " + this.legs[i].last_name;
                 this.nodes.add([
-                    {id: name, label: name, cid: this.legs[i].party, group: this.legs[i].party}
+                    {id: name, label: name, cid: this.legs[i].state, group: this.legs[i].party}
                 ]);
                 if(this.legs[i].type == "rep"){
                     this.edges.add([
@@ -233,11 +270,12 @@ methods: {
             var container = document.getElementById('mynetwork');
             container.style.visibility = "visible";
             // provide the data in the vis format
-            var data = {
+            var dataSet = {
                 nodes: this.nodes,
                 edges: this.edges
             };
             var options = {
+                // physics: false,
                 groups:{
                     Democrat: {color: {background: "blue"}},
                     Republican: {color: {background: "red"}, shape:"square"},
@@ -249,8 +287,38 @@ methods: {
             };
 
             // initialize your network!
-            var network = new vis.Network(container, data, options);
+            var network = new vis.Network(container, dataSet, options);
+            /*
+              network.on("click" funciton ) blah blah blah display details
+            */
+            this.networkGraph = network;
+            this.data = dataSet;
         }
+    },
+    updateCluster() {
+      this.networkGraph.setData(this.data);
+      var states = ["AL", 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME',
+      'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI',
+      'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'];
+      var clusterOptionsByData;
+      for (var i = 0; i < states.length; i++){
+        var state = states[i];
+        clusterOptionsByData = {
+          joinCondition: function (childOptions) {
+            return childOptions.cid == state;
+          },
+          processProperties: function (clusterOptions, childNodes, childEdges) {
+            var totalMass = 0;
+            for (var j = 0; j < childNodes.length; j++){
+              totalMass += childNodes[j].mass;
+            }
+            clusterOptions.mass = totalMass;
+            return clusterOptions;
+          },
+          clusterNodeProperties: {id: 'cluster'+state, borderWidth: 3, shape: 'database', label:'All members from '+state}
+        };
+        this.networkGraph.cluster(clusterOptionsByData);
+      }
     },
     ispDonations() {
         //saving isp dataset to firebase
@@ -272,14 +340,16 @@ methods: {
 <style>
 @import url(http://fonts.googleapis.com/css?family=Roboto);
 #form{
-    display: table-cell;
+    display: inline-block;
     vertical-align: middle;
+    padding-top: 10%;
+    padding-bottom: 10%;
 }
 header{
     padding-top: 12.5%;
     padding-bottom: 12.5%;
     background-color: #a4fcc8;
-    height: 100vh;
+    height: 60vh;
 }
 header h1{
     padding-bottom: 3%;
@@ -303,9 +373,11 @@ header h1{
     text-align: center;
     color: #2c3e50;
 }
-.input{
-    border: 1px solid #d9d9d9;
-    border-top: 1px solid #c0c0c0;
+.inputLogin{
+  border: 1px solid #d9d9d9;
+  border-top: 1px solid #c0c0c0;
+  margin-bottom: 15%;
+  padding: 3%;
 }
 body{
     margin: 0;
