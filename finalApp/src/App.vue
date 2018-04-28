@@ -12,6 +12,22 @@
         <button v-on:click="legislatorsGraph" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Network Graph</button>
         <button v-on:click="ispDonations" class="btn btn-primary">ISP Donations</button>
         <!-- <wheel></wheel> -->
+        <br> <br>
+        <div id="myLoc" v-if="showMap">
+            <gmap-map
+                :center="center"
+                :zoom="6"
+                style="height: 480px; width: 50%;"
+            >
+            <gmap-marker
+                :position="center"
+                :clickable="true"
+            ></gmap-marker>
+            </gmap-map>
+
+            <button v-on:click="loadcgData" class="btn btn-primary">ur cg</button>
+        </div>
+        <!-- shit goes here -->
       </div>
       <!-- Modal -->
       <div class="modal fade" id="myModal" role="dialog">
@@ -74,7 +90,12 @@ export default {
       password: '',
       isp: [],
       nodes: '',
-      edges: ''
+      edges: '',
+      center: {
+          lat: '',
+          lng: ''
+      },
+      showMap: false
     }
   },
   components: {
@@ -91,6 +112,20 @@ export default {
       vm.isp.push(data);
       console.log("isp");
     });
+    // Get location of user
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                    // console.log(position.coords);
+                    vm.center.lat = position.coords.latitude;
+                    vm.center.lng = position.coords.longitude;
+                    // console.log(vm.center);
+                    vm.showMap = true;
+                }
+            )
+        } else {
+            console.log("Geolocation is not supported by browser");
+        }
+        // Load user's senator based on location
   },
   methods: {
     load() {
@@ -122,7 +157,16 @@ export default {
         this.legs[i].age = this.calculateAge(Date.parse(this.legs[i].birthday));
         //console.log(this.calculateAge(Date.parse(this.legs[i].birthday)));
       }
-      // TODO: missing data -> ignore column
+      for (var i = 0; i < this.legs.length; i++) {
+                this.legs[i].age = this.calculateAge(Date.parse(this.legs[i].birthday));
+                //console.log(this.calculateAge(Date.parse(this.legs[i].birthday)));
+                for (var property in this.legs[0]) {
+                    if (this.legs[i][property] == "") {
+                        console.log(this.legs[i] + " is missing property " + property);
+                        // TODO: ignore this property in data analysis
+                    }
+                }
+            }
     },
     getLocation() {
       // request("https://ipinfo.io", function(error, response, body) {
@@ -210,7 +254,16 @@ export default {
     ispDonations() {
       //saving isp dataset to firebase
       //firebase.database().ref("isp").set(this.isp);
-    }
+    },
+            loadcgData() {
+            console.log("my lat " + this.center.lat);
+            console.log("my long " + this.center.lng);
+            fetch("https://maps.googleapis.com/maps/api/geocode/json?latlng="+this.center.lat+","+this.center.lng+"&key=AIzaSyCotQCA476JOVJ87et877SGKGFI3C840Ac").then(response => response.json())
+                      .then(data => {
+                          console.log(data)
+                       })
+                      .catch(error => console.log(error))
+        }
   }
 }
 </script>
