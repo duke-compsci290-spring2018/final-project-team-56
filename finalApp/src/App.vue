@@ -7,9 +7,11 @@
                 <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#myModal">Login</button>
             </div>
             <div v-else>
+                <p>Signed in as: {{access}}</p>
                 <button v-on:click="load" class="btn btn-primary">Load Data</button>
                 <button v-on:click="legislatorsGraph" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Network Graph</button>
-                <button v-on:click="ispDonations" class="btn btn-primary">ISP Donations</button>
+                <button v-on:click="ispDonations" class="btn btn-primary">ISP Donations</button><br><br>
+                <button v-on:click="logout" class="btn btn-outline-secondary">Logout</button>
                 <!-- <wheel></wheel> -->
                 <!-- shit goes here -->
             </div>
@@ -119,6 +121,7 @@ export default {
         {email: 'h', password: 'h', access: 'User'},
         {email: 'z', password: 'z', access: 'Admin'}
       ],
+      access: '',
       admin: false,
       guest: false,
       user: false,
@@ -135,10 +138,6 @@ export default {
       isp: [],
       sponsoreshipH: [],
       sponsoreshipS: [],
-      networkGraph: '',
-      data:'', //this and networkgraph are all for updating the network graph
-      nodes: '',
-      edges: '',
       center: {
         lat: '',
         lng: ''
@@ -199,6 +198,10 @@ export default {
     }
 },
 methods: {
+  logout(){
+    console.log("trying to log out");
+    location.reload();
+  },
   login() {
     //determine if user or Admin
     for(var i = 0; i < this.users.length; i++){
@@ -210,6 +213,11 @@ methods: {
         this.email = '';
         this.password = '';
         this.signed();
+        if(this.admin){
+          this.access = "Admin";
+        }else{
+          this.access = "User";
+        }
       }
     }
     if(!this.signedIn){
@@ -230,11 +238,13 @@ methods: {
       "password": this.password,
       "accesss": "User"
     });
+    this.access = "User";
     this.user = true;
     this.signedIn = true;
     this.signed();
   },
   guestAccess() {
+    this.access = "Guest";
     this.guest = true;
     this.signedIn = true;
     this.signed();
@@ -544,7 +554,7 @@ header{
     padding-top: 12.5%;
     padding-bottom: 12.5%;
     background-color: #fafafa;
-    height: 60vh;
+    height: 75vh;
 }
 header h1{
     padding-bottom: 3%;

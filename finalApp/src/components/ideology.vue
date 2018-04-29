@@ -1,7 +1,10 @@
 <template>
-<div id="myDiv">
+  <div>
+    <h1>Viewing Ideologies of the members of Congress by Chamber</h1>
+    <div id="myDiv">
 
-</div>
+    </div>
+  </div>
 
 </template>
 
@@ -19,37 +22,52 @@ export default {
     'senateSet'
   ],
   mounted: function(){
-    //loop thru for x and y and append name to text!
+    console.log(this.houseSet);
+    console.log(this.senateSet);
     var trace1 = {
-  x: [1, 2, 3, 4, 5],
-  y: [1, 6, 3, 6, 1],
-  mode: 'markers',
-  type: 'scatter',
-  name: 'Team A',
-  text: ['A-1', 'A-2', 'A-3', 'A-4', 'A-5'],
-  marker: { size: 12 }
-};
+      x:[],
+      y:[],
+      mode: 'markers',
+      type: 'scatter',
+      name: 'Representatives',
+      text: [],
+      marker: { size: 12}
+    };
+    for (var i = 0; i < this.houseSet.length; i++){
+        trace1.x.push(parseFloat(this.houseSet[i][" ideology"]));
+        trace1.y.push(parseFloat(this.houseSet[i][" leadership"]));
+        trace1.text.push(this.houseSet[i][" name"]);
+    }
+    //loop thru for x and y and append name to text!
+
 
 var trace2 = {
-  x: [1.5, 2.5, 3.5, 4.5, 5.5],
-  y: [4, 1, 7, 1, 4],
+  x: [],
+  y: [],
   mode: 'markers',
   type: 'scatter',
-  name: 'Team B',
-  text: ['B-a', 'B-b', 'B-c', 'B-d', 'B-e'],
+  name: 'Senate',
+  text: [],
   marker: { size: 12 }
 };
+for (var i = 0; i < this.senateSet.length; i++){
+    trace2.x.push(parseFloat(this.senateSet[i][" ideology"]));
+    trace2.y.push(parseFloat(this.senateSet[i][" leadership"]));
+    trace2.text.push(this.senateSet[i][" name"]);
+}
 
 var data = [ trace1, trace2 ];
 
 var layout = {
   xaxis: {
-    range: [ 0.75, 5.25 ]
+    range: [ 0, 1 ],
+    title: "Ideology"
   },
   yaxis: {
-    range: [0, 8]
+    range: [0, 1],
+    title: "Leadership"
   },
-  title:'Data Labels Hover'
+  title:'Ideology vs Leadership'
 };
 
 Plotly.newPlot('myDiv', data, layout);
