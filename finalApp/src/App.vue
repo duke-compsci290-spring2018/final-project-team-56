@@ -31,7 +31,8 @@
                 <input id="password" class="inputLogin" type="password" v-model="password" placeholder="Password"><br>
                 <button v-on:click="login" class="btn btn-outline-primary">Login</button>
                 <button v-on:click="register" class="btn btn-outline-primary">Register</button>
-                <button v-on:click="guestAccess" class="btn btn-outline-primary" data-dismiss="modal">Guest</button>
+                <button v-on:click="guestAccess" class="btn btn-outline-primary">Guest</button>
+                <p v-if="loginError" class="errorLogin">Email and Password incorrect or exists!</p>
               </div>
               <div v-if="signedIn" id="mynetwork" class="network"></div>
             </div>
@@ -42,7 +43,7 @@
         </div>
       </div>
     </header>
-    <body>
+    <body v-if="signedIn">
       <div class="container-fluid">
         <div class="row justify-content-md-center">
           <div v-if="showMap" class="col-lg-8 col-md-6 col-sm-12">
@@ -68,6 +69,7 @@
       </div>
     </div>
   </div>
+  <ideology v-if="signedIn" :houseSet="sponsoreshipH" :senateSet="sponsoreshipS"></ideology>
 </body>
 
 </div>
@@ -78,6 +80,7 @@ import * as d3 from 'd3'
 import request from 'request';
 // import numerical from './components/numerical'
 import donations from './components/donations'
+import ideology from './components/ideology'
 import cgInfo from './components/cgInfo'
 
 var firebase = require('firebase');
@@ -92,6 +95,8 @@ var config = {
   messagingSenderId: "919617906676"
 };
 firebase.initializeApp(config);
+var network;
+var dataSet;
 
 export default {
   name: 'App',
@@ -105,6 +110,7 @@ export default {
       guest: false,
       user: false,
       legs: [],
+      loginError: false,
       categorical: [],
       numerical: [],
       numSum: [],
@@ -112,6 +118,7 @@ export default {
       showData: false,
       email: '',
       password: '',
+      states: [],
       isp: [],
       sponsoreshipH: [],
       sponsoreshipS: [],
@@ -132,6 +139,7 @@ export default {
   components: {
     // wheel
     donations,
+    ideology,
     cgInfo
   },
   mounted: function () {
@@ -176,23 +184,54 @@ export default {
 methods: {
   login() {
     //determine if user or Admin
-    this.user = true; //this.admin = true
-    this.signedIn = true;
+    for(var i = 0; i < this.users.length; i++){
+      if(this.users[i].email = this.email && this.users[i].password == this.password){
+        this.loginError = false;
+        this.signedIn = true;
+        this.admin = (this.users[i].access == "Admin");
+        this.user = (this.users[i].access == "User");
+        this.email = '';
+        this.password = '';
+        this.signed();
+      }
+    }
+    if(!this.signedIn){
+      this.loginError = true;
+    }
   },
   register() {
+    for(var i = 0; i < this.users.length; i++){
+      if(this.users[i].email = this.email && this.users[i].password == this.password){
+        //user exists already
+        alert("User exists already!");
+        this.login();
+        return;
+      }
+    }
+    this.users.push({
+      "email": this.email,
+      "password": this.password,
+      "accesss": "User"
+    });
     this.user = true;
     this.signedIn = true;
+    this.signed();
   },
   guestAccess() {
     this.guest = true;
     this.signedIn = true;
+    this.signed();
+  },
+  signed(){
+    $('#myModal').modal('toggle');
     this.loadBar();
   },
   loadBar(){
-    var svg = d3.select("body").append("svg")
-                                .attr("height", "100%")
-                                .attr("width", "100%");
-    
+    console.log("here");
+    //var svg = d3.select("#congressIdeology").append("svg:svg")
+                                // .attr("height", "400px")
+                                // .attr("width", "50%");
+
   },
   load() {
     var vm = this;
@@ -266,29 +305,32 @@ generateNumericalSummary() {
 legislatorsGraph(){
   if(!this.showData){
     this.showData = true;
-    this.nodes = new vis.DataSet([
+    var nodes = new vis.DataSet([
       {id: 'Congress', label: 'Congress'},
       {id: 'House', label: 'House'},
       {id: 'Senate', label: 'Senate'}
     ]);
 
     // create an array with edges
-    this.edges = new vis.DataSet([
+    var edges = new vis.DataSet([
       {from: 'Congress', to: 'House'},
       {from: 'Congress', to: 'Senate'}
     ]);
 
       for (var i = 0; i < this.legs.length; i++){
+        if(this.states.indexOf(this.legs[i].state)==-1){
+          this.states.push(this.legs[i].state);
+        }
         var name = this.legs[i].first_name + " " + this.legs[i].last_name;
-        this.nodes.add([
-          {id: name, label: name, cid: this.legs[i].party, group: this.legs[i].party}
+        nodes.add([
+          {id: name, label: name, cid: this.legs[i].state, group: this.legs[i].party}
         ]);
         if(this.legs[i].type == "rep"){
-          this.edges.add([
+          edges.add([
             {from: 'House', to: name}
           ]);
         }else{
-          this.edges.add([
+          edges.add([
             {from: 'Senate', to: name}
           ]);
         }
@@ -297,12 +339,12 @@ legislatorsGraph(){
     var container = document.getElementById('mynetwork');
     container.style.visibility = "visible";
     // provide the data in the vis format
-    var dataSet = {
-      nodes: this.nodes,
-      edges: this.edges
+    dataSet = {
+      nodes: nodes,
+      edges: edges
     };
     var options = {
-      // physics: false,
+       // physics: false,
       groups:{
         Democrat: {color: {background: "blue"}},
         Republican: {color: {background: "red"}, shape:"square"},
@@ -314,37 +356,45 @@ legislatorsGraph(){
     };
 
     // initialize your network!
-    var network = new vis.Network(container, dataSet, options);
-    /*
-    network.on("click" funciton ) blah blah blah display details
-    */
-    this.networkGraph = network;
-    this.data = dataSet;
+    network = new vis.Network(container, dataSet, options);
   }
 },
 updateCluster() {
-  this.networkGraph.setData(this.data);
-  var states = ["AL", 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME',
-  'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI',
-  'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'];
+  network.setData(dataSet);
   var clusterOptionsByData;
-  for (var i = 0; i < states.length; i++){
-    var state = states[i];
+  for (var i = 0; i < this.states.length; i++){
+    var state = this.states[i];
+    var colorOpp;
     clusterOptionsByData = {
       joinCondition: function (childOptions) {
         return childOptions.cid == state;
       },
       processProperties: function (clusterOptions, childNodes, childEdges) {
         var totalMass = 0;
+        var numRep = 0;
+        var numDem = 0;
         for (var j = 0; j < childNodes.length; j++){
+          if(childNodes[j].group == "Democrat"){
+            numDem++;
+          }
+          if(childNodes[j].group == "Republican"){
+            numRep++;
+          }
           totalMass += childNodes[j].mass;
+        }
+        if(numDem < numRep){
+          colorOpp = "red";
+        }else if(numDem == numRep){
+          colorOpp = "purple";
+        }else{
+          colorOpp = "blue";
         }
         clusterOptions.mass = totalMass;
         return clusterOptions;
       },
-      clusterNodeProperties: {id: 'cluster'+state, borderWidth: 3, shape: 'database', label:'All members from '+state}
+      clusterNodeProperties: {id: 'cluster'+state, borderWidth: 1, color: {background: colorOpp}, shape: 'database', label:"Members from "+state}
     };
-    this.networkGraph.cluster(clusterOptionsByData);
+    network.cluster(clusterOptionsByData);
   }
 },
 ispDonations() {
@@ -439,5 +489,7 @@ body{
   justify-content: start;
   background-color: #DCDCDC;
 }
-
+.errorLogin{
+  color: red;
+}
 </style>

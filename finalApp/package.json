@@ -13,6 +13,7 @@
     "@google/maps": "^0.4.6",
     "ajv": "^6.4.0",
     "bootstrap": "^4.1.0",
+    "canvasjs": "^1.8.1",
     "d3": "^5.1.0",
     "firebase": "^4.13.1",
     "firebaseui": "^2.7.0",
