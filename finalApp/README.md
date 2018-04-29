@@ -22,3 +22,4 @@ For a detailed explanation on how things work, check out the [guide](http://vuej
 
 Resources:
 https://www.w3schools.com/html/html5_geolocation.asp
+https://vuejs.org/v2/guide/class-and-style.html
