@@ -13,6 +13,7 @@
                 <!-- <wheel></wheel> -->
                 <!-- shit goes here -->
             </div>
+          </header>
             <!-- Modal -->
             <div class="modal fade" id="myModal" role="dialog">
                 <div class="modal-dialog">
@@ -42,10 +43,6 @@
                     </div>
                 </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </header>
     <body v-if="signedIn">
       <div v-if="showMap">
               <gmap-map
