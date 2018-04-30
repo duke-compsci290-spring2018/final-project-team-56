@@ -100,7 +100,9 @@ import filter from './components/filter'
 
 var firebase = require('firebase');
 var vis = require('vis')
-
+//TODO: admin features such as the log of everything that's been done - promote users to admin
+//+ delete dataset/upload dataset?
+//TODO: user features - uploading dataset to see things
 var config = {
     apiKey: "AIzaSyBGUi_589649cXRqDWCE5tIbwyN7iOYCXI",
     authDomain: "final-project-56.firebaseapp.com",
@@ -163,7 +165,7 @@ export default {
   },
   mounted: function () {
     var vm = this;
-    d3.csv("https://raw.githubusercontent.com/duke-compsci290-spring2018/final-project-team-56/zuzu/finalApp/data/legislators-current.csv", function(data) {
+    d3.csv("https://raw.githubusercontent.com/duke-compsci290-spring2018/final-project-team-56/master/finalApp/data/legislators-current.csv", function(data) {
       vm.legs.push(data);
       console.log("done");
     });

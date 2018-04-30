@@ -1,8 +1,30 @@
 <template>
-  <div>
-    <h1>Viewing Ideologies of the members of Congress by Chamber</h1>
-    <div id="myDiv">
-
+  <div id="main">
+    <h1>Ideologies of the Members of Congress by Chamber</h1>
+    <div class="row">
+      <div class="col-lg-6 col-md-6 col-sm-12 textbody">
+        <h3>Ideology Analysis</h3>
+        <p>The ideology analysis in place here is a score on how liberal-conservative each Member of Congress is based on his or her pattern of bill cosponsorship.<p>
+        <p>In essence, each Member of Congress who cosponsors similar bills will get have scores that are similar, and members who sponsor different bills
+          will have more contrasting scores. This relies on members that have similar political views to cosponsor the the same set of bills or bills by the same
+          set of authors. Conversely, members with different political views would be more likely to cosponsor different bills.</p>
+        <p>The charts on the right plot the ideology score against the leadership score, where leadership is determined by the number of bills sponsored. Looking at the
+          extremes shows, for instance, that Senator Jim Inhofe appears to be an extreme Republican in the Senate chart and he is indeed regarded as one of the most
+          conservative senators.</p>
+        <p>What is fascinating about the plot is the huge disparity and polarization that has begun to take hold within the modern political sphere. When looking at
+          similar charts from Congress years ago, we see less of a clear divide between political parties. Overall, this shows that modern politics has become more
+          segregated into specific political ideologies especially as there are only two Independents within Congress. Both of whom are in the Senate.</p>
+        <h3>Methodology, Dataset, and Citations</h3>
+        <p>The ideology scores were computed through an analysis called Principle Component Analysis and the leadership scores were computed through scraping and page
+          rank analysis. More information about how this was completed is cited here.</p>
+          <p id="citation">GovTrack.us. 2013. Leadership Analysis of Members of Congress. Accessed at <a href="https://www.govtrack.us/about/analysis">https://www.govtrack.us/about/analysis</a>.</p>
+        <p>Datasets: <a href="https://raw.githubusercontent.com/duke-compsci290-spring2018/final-project-team-56/master/finalApp/data/sponsorshipanalysis_h.csv">House</a>
+          <a href="https://raw.githubusercontent.com/duke-compsci290-spring2018/final-project-team-56/master/finalApp/data/sponsorshipanalysis_s.csv">Senate</a></p>
+      </div>
+      <div class="col-lg-6 col-md-6 col-sm-12">
+        <div id="myDiv"></div>
+        <div id="senateDiv"></div>
+      </div>
     </div>
   </div>
 
@@ -22,58 +44,125 @@ export default {
     'senateSet'
   ],
   mounted: function(){
-    console.log(this.houseSet);
-    console.log(this.senateSet);
     var trace1 = {
       x:[],
       y:[],
       mode: 'markers',
       type: 'scatter',
-      name: 'Representatives',
+      name: 'Democrat',
       text: [],
-      marker: { size: 12}
+      marker: { size: 6 }
+    };
+    var trace2 = {
+      x: [],
+      y: [],
+      mode: 'markers',
+      type: 'scatter',
+      name: 'Republican',
+      text: [],
+      marker: { size: 6 }
+    };
+    var trace4 = {
+      x:[],
+      y:[],
+      mode: 'markers',
+      type: 'scatter',
+      name: 'Democrat',
+      text: [],
+      marker: { size: 6 }
+    };
+    var trace5 = {
+      x: [],
+      y: [],
+      mode: 'markers',
+      type: 'scatter',
+      name: 'Republican',
+      text: [],
+      marker: { size: 6 }
+    };
+    var trace6 = {
+      x: [],
+      y: [],
+      mode: 'markers',
+      type: 'scatter',
+      name: 'Independent',
+      text: [],
+      marker: { size: 6 }
     };
     for (var i = 0; i < this.houseSet.length; i++){
+      if (this.houseSet[i][" party"] == " Democrat"){
         trace1.x.push(parseFloat(this.houseSet[i][" ideology"]));
         trace1.y.push(parseFloat(this.houseSet[i][" leadership"]));
         trace1.text.push(this.houseSet[i][" name"]);
+      }else if (this.houseSet[i][" party"] == " Republican"){
+        trace2.x.push(parseFloat(this.houseSet[i][" ideology"]));
+        trace2.y.push(parseFloat(this.houseSet[i][" leadership"]));
+        trace2.text.push(this.houseSet[i][" name"]);
+      }else {
+        trace3.x.push(parseFloat(this.houseSet[i][" ideology"]));
+        trace3.y.push(parseFloat(this.houseSet[i][" leadership"]));
+        trace3.text.push(this.houseSet[i][" name"]);
+      }
     }
-    //loop thru for x and y and append name to text!
 
+    for (var i = 0; i < this.senateSet.length; i++){
+      if (this.senateSet[i][" party"] == " Democrat"){
+        trace4.x.push(parseFloat(this.senateSet[i][" ideology"]));
+        trace4.y.push(parseFloat(this.senateSet[i][" leadership"]));
+        trace4.text.push(this.senateSet[i][" name"]);
+      }else if (this.senateSet[i][" party"] == " Republican"){
+        trace5.x.push(parseFloat(this.senateSet[i][" ideology"]));
+        trace5.y.push(parseFloat(this.senateSet[i][" leadership"]));
+        trace5.text.push(this.senateSet[i][" name"]);
+      }else {
+        trace6.x.push(parseFloat(this.senateSet[i][" ideology"]));
+        trace6.y.push(parseFloat(this.senateSet[i][" leadership"]));
+        trace6.text.push(this.senateSet[i][" name"]);
+      }
+    }
 
-var trace2 = {
-  x: [],
-  y: [],
-  mode: 'markers',
-  type: 'scatter',
-  name: 'Senate',
-  text: [],
-  marker: { size: 12 }
-};
-for (var i = 0; i < this.senateSet.length; i++){
-    trace2.x.push(parseFloat(this.senateSet[i][" ideology"]));
-    trace2.y.push(parseFloat(this.senateSet[i][" leadership"]));
-    trace2.text.push(this.senateSet[i][" name"]);
-}
+    var data = [ trace1, trace2 ];
+    var data2 = [ trace4, trace5, trace6 ];
 
-var data = [ trace1, trace2 ];
+    var layout = {
+      xaxis: {
+        range: [ 0, 1.05 ],
+        title: "Ideology"
+      },
+      yaxis: {
+        range: [0, 1.05],
+        title: "Leadership"
+      },
+      title:'Ideology vs Leadership in the House'
+    };
 
-var layout = {
-  xaxis: {
-    range: [ 0, 1 ],
-    title: "Ideology"
-  },
-  yaxis: {
-    range: [0, 1],
-    title: "Leadership"
-  },
-  title:'Ideology vs Leadership'
-};
-
-Plotly.newPlot('myDiv', data, layout);
+    Plotly.newPlot('myDiv', data, layout);
+    layout.title = 'Ideology vs Leadership in the Senate';
+    Plotly.newPlot('senateDiv', data2, layout);
   },
   methods: {
 
   }
 }
 </script>
+<style>
+#citation{
+  padding-left: 7.5%;
+  padding-right: 7.5%;
+}
+#main h1{
+  text-align: center;
+  margin-top: 5%;
+  margin-bottom: 5%;
+}
+#myDiv{
+  margin-bottom: 3%;
+}
+.textbody{
+  padding-left: 5%;
+  padding-right: 5%;
+}
+.row h3{
+  text-align: center;
+}
+</style>
