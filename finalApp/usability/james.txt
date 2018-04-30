@@ -1,0 +1,8 @@
+Name: James Wu
+Background: Computer Science and Statistical Science Major
+When: 4/29/18 12:30am
+
+I really liked the use of the Google Maps API to show your current state. I also thought that having a list of favorite
+Congressmen was also really useful and enjoyed the sorting capabilities within that. I think something they could have
+fixed was adding some sort of add all the Congressmen in one state feature, so I wouldn't have to click through everyone.
+The interactive ideology graphs were impressive, and I'd be interested in which library they used for that.
