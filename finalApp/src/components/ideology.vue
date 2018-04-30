@@ -20,13 +20,16 @@
           <p id="citation">GovTrack.us. 2013. Leadership Analysis of Members of Congress. Accessed at <a href="https://www.govtrack.us/about/analysis">https://www.govtrack.us/about/analysis</a>.</p>
         <p>Datasets: <a href="https://raw.githubusercontent.com/duke-compsci290-spring2018/final-project-team-56/master/finalApp/data/sponsorshipanalysis_h.csv">House</a>
           <a href="https://raw.githubusercontent.com/duke-compsci290-spring2018/final-project-team-56/master/finalApp/data/sponsorshipanalysis_s.csv">Senate</a></p>
+          <p>Click the button below to view all the Members of Congress on a network graph.</p>
+          <button v-on:click="legislatorsGraph" class="btn btn-primary" id="networkToggle" data-toggle="modal" data-target="#myModal2">Network Graph</button>
+          <p>Click the button below to view the graph above but with the ideology and leadership scores.</p>
+          <button v-on:click="congressGraph" class="btn btn-primary" id="networkToggle" data-toggle="modal" data-target="#myModal2">Weighted Graph</button>
       </div>
       <div class="col-lg-6 col-md-6 col-sm-12">
         <div id="myDiv"></div>
         <div id="senateDiv"></div>
       </div>
     </div>
-    <button v-on:click="legislatorsGraph" class="btn btn-primary" data-toggle="modal" data-target="#myModal2">Network Graph</button>
     <!--  Modal -->
     <div class="modal fade" id="myModal2" role="dialog">
         <div class="modal-dialog">
@@ -34,13 +37,14 @@
             <div class="modal-content">
                 <div class="modal-header">
                         <h4 class="modal-title">Network Graph of Congress</h4>
-                        <button v-on:click="updateCluster" class="btn btn-outline-primary">Cluster by State</button>
                 </div>
                 <div class="modal-body">
                   <div id="mynetwork" class="network"></div>
                 </div>
                 <div class="modal-footer">
+                    <button v-if="showData" v-on:click="updateCluster" class="btn btn-outline-primary">Cluster by State</button>
                     <button type="button" class="btn btn-default closer" data-dismiss="modal">Close</button>
+                    <p>{{type}}</p>
                 </div>
             </div>
         </div>
@@ -59,7 +63,9 @@ export default {
   data () {
     return {
       showData: false,
-      states: []
+      weightedData: false,
+      states: [],
+      type: ''
     }
   },
   props: [
@@ -165,11 +171,64 @@ export default {
     Plotly.newPlot('senateDiv', data2, layout);
   },
   methods: {
+    congressGraph(){
+      if(!this.weightedData){
+        this.weightedData = true;
+        this.showData = false;
+        var nodes = new vis.DataSet([
+          {id: 'Congress', label: 'Congress', value: 30},
+          {id: 'House', label: 'House', value: 20},
+          {id: 'Senate', label: 'Senate', value: 20}
+        ]);
+        var edges = new vis.DataSet([
+          {from: 'Congress', to: 'House', value: 2},
+          {from: 'Congress', to: 'Senate', value: 2}
+        ]);
+        for(var i = 0; i < this.houseSet.length; i++){
+          nodes.add([
+            {id: this.houseSet[i].ID, label: this.houseSet[i][" name"], group: this.houseSet[i][" party"], value: 10*(1+parseFloat(this.houseSet[i][" ideology"]))}
+          ]);
+          edges.add([
+            {from: 'House', to: this.houseSet[i].ID, value: 10*(1+parseFloat(this.houseSet[i][" leadership"]))}
+          ]);
+        }
+        for(var i = 0; i < this.senateSet.length; i++){
+          nodes.add([
+            {id: this.senateSet[i].ID, label: this.senateSet[i][" name"], group: this.senateSet[i][" party"], value: 10*(1+parseFloat(this.senateSet[i][" ideology"]))}
+          ]);
+          edges.add([
+            {from: 'Senate', to: this.senateSet[i].ID, value: 10*(1+parseFloat(this.senateSet[i][" leadership"]))}
+          ]);
+        }
+
+        var container = document.getElementById('mynetwork');
+        container.style.visibility = "visible";
+        dataSet = {
+          nodes: nodes,
+          edges: edges
+        };
+        var options = {
+          nodes:{
+            shape: 'dot',
+          },
+           // physics: false,
+          groups:{
+            ' Democrat': {color: {background: "blue"}},
+            ' Republican': {color: {background: "red"}},
+            ' Independent': {color: {background: "yellow"}}
+          },
+          layout:{
+            improvedLayout: false
+          }
+        };
+        network = new vis.Network(container, dataSet, options);
+
+      }
+    },
     legislatorsGraph(){
-      console.log(this.legs);
       if(!this.showData){
-        console.log("here");
         this.showData = true;
+        this.weightedData = false;
         var nodes = new vis.DataSet([
           {id: 'Congress', label: 'Congress'},
           {id: 'House', label: 'House'},
@@ -209,6 +268,9 @@ export default {
           edges: edges
         };
         var options = {
+          nodes:{
+            shape: 'dot',
+          },
            // physics: false,
           groups:{
             Democrat: {color: {background: "blue"}},
@@ -225,6 +287,17 @@ export default {
 
         // initialize your network!
         network = new vis.Network(container, dataSet, options);
+        var vm = this;
+        network.on("doubleClick", function(params){
+          if (params.nodes.length == 1){
+            if (network.isCluster(params.nodes[0])){
+              network.openCluster(params.nodes[0]);
+            }
+          }
+        });
+        network.on("click", function(params){
+          vm.type = params.nodes[0];
+        });
       }
     },
     updateCluster() {
@@ -269,6 +342,16 @@ export default {
 }
 </script>
 <style scoped>
+.modal-title{
+  text-align: center;
+}
+#main {
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #2c3e50;
+  padding-bottom: 5%;
+}
 #mynetwork {
     display: inline-block;
     background-color: white;
