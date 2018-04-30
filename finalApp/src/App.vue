@@ -23,7 +23,9 @@
                         </div>
                         <div class="modal-body">
                           <div v-if="!signedIn" id="form">
+                            <label for="email">Email</label>
                             <input id="email" class="inputLogin" type="text" v-model="email" placeholder="Email"><br>
+                            <label for="password">Password</label>
                             <input id="password" class="inputLogin" type="password" v-model="password" placeholder="Password"><br>
                             <button v-on:click="login" class="btn btn-outline-primary">Login</button>
                             <button v-on:click="register" class="btn btn-outline-primary">Register</button>
