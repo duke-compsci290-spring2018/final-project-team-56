@@ -26,6 +26,7 @@
     "sass-loader": "^7.0.1",
     "vis": "^4.21.0",
     "vue": "^2.5.2",
+    "vue-tweet-embed": "^2.1.1",
     "vue2-google-maps": "^0.8.12"
   },
   "devDependencies": {
