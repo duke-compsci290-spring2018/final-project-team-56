@@ -201,6 +201,7 @@ export default {
         for (var i = 0; i < data.users.length; i++){
           vm.users.push(data.users[i]);
         }
+        console.log(vm.users);
       }
       if("logs" in data){
         for (var i = 0; i < data.logs.length; i++){
@@ -300,9 +301,10 @@ methods: {
     this.users.push({
       "email": this.email,
       "password": this.password,
-      "accesss": "User",
+      "access": "User",
       "id": this.count
     });
+    this.id = this.count;
     this.setFireBase("users", this.users);
     this.logs.push("Added new user id: " + this.id + " at "+ Date());
     this.setFireBase("logs", this.logs);
