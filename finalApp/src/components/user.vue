@@ -21,7 +21,8 @@
           <th scope="row" >{{index+1}}</th>
           <!-- could include a v-if to add dataset to masterset -->
           <th scope="row" @click="statistics(dset.data)">{{dset.name}}</th>
-          <th scope="row"><button class="btn-danger" @click="remove(dset)">x</button><button v-if="admin" class="btn-info" @click="moveMaster(dset)">u</button></th>
+          <th scope="row"><button class="btn-danger" @click="remove(dset)">x</button><button v-if="admin" class="btn-info" @click="moveMaster(dset)">u</button>
+          <button @click="saveFile(dset)" class="btn-light">s</button><div id="linkSave"></div></th>
         </tr>
       </tbody>
     </table>
@@ -31,7 +32,7 @@
         <tr>
           <th scope="col">#</th>
           <th scope="col">DataSet</th>
-          <th v-if="admin"></th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -39,7 +40,8 @@
           <th scope="row" >{{index+1}}</th>
           <!-- could include a v-if to add dataset to masterset -->
           <th scope="row" @click="statistics(dset.data)">{{dset.name}}</th>
-          <th scope="row" v-if="admin"><button class="btn-danger" @click="removeMaster(dset)">x</button></th>
+          <th scope="row"><button class="btn-danger" v-if="admin" @click="removeMaster(dset)">x</button>
+          <button @click="saveFileM(dset)" class="btn-light">s</button><div id="saveLink"></div></th>
         </tr>
       </tbody>
     </table>
@@ -99,6 +101,14 @@ export default {
     'logs'
   ],
   methods: {
+    saveFile(dset){
+      var data = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dset));
+      $('<a href="data:' + data + '" download="data.json">download JSON</a>').appendTo('#linkSave');
+    },
+    saveFileM(dset){
+      var data = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dset));
+      $('<a href="data:' + data + '" download="data.json">download JSON</a>').appendTo('#saveLink');
+    },
     setFireBase(key, val){
       firebase.database().ref("/"+key).set(val);
     },

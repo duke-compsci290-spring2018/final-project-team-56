@@ -26,3 +26,4 @@ https://vuejs.org/v2/guide/class-and-style.html
 https://developers.google.com/maps/documentation/geocoding/intro#ReverseGeocoding
 https://vuejs.org/v2/guide/conditional.html
 https://www.npmjs.com/package/vue-tweet-embed
+https://plot.ly/feed/
