@@ -26,22 +26,46 @@
         <div id="senateDiv"></div>
       </div>
     </div>
+    <button v-on:click="legislatorsGraph" class="btn btn-primary" data-toggle="modal" data-target="#myModal2">Network Graph</button>
+    <!--  Modal -->
+    <div class="modal fade" id="myModal2" role="dialog">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                        <h4 class="modal-title">Network Graph of Congress</h4>
+                        <button v-on:click="updateCluster" class="btn btn-outline-primary">Cluster by State</button>
+                </div>
+                <div class="modal-body">
+                  <div id="mynetwork" class="network"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default closer" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
   </div>
 
 </template>
 
 <script>
+var network;
+var dataSet;
+var vis = require('vis')
 
 export default {
   name: 'ideology',
   data () {
     return {
-      answers: ''
+      showData: false,
+      states: []
     }
   },
   props: [
     'houseSet',
-    'senateSet'
+    'senateSet',
+    'legs'
   ],
   mounted: function(){
     var trace1 = {
@@ -141,11 +165,118 @@ export default {
     Plotly.newPlot('senateDiv', data2, layout);
   },
   methods: {
+    legislatorsGraph(){
+      console.log(this.legs);
+      if(!this.showData){
+        console.log("here");
+        this.showData = true;
+        var nodes = new vis.DataSet([
+          {id: 'Congress', label: 'Congress'},
+          {id: 'House', label: 'House'},
+          {id: 'Senate', label: 'Senate'}
+        ]);
 
+        // create an array with edges
+        var edges = new vis.DataSet([
+          {from: 'Congress', to: 'House'},
+          {from: 'Congress', to: 'Senate'}
+        ]);
+
+          for (var i = 0; i < this.legs.length; i++){
+            if(this.states.indexOf(this.legs[i].state)==-1){
+              this.states.push(this.legs[i].state);
+            }
+            var name = this.legs[i].first_name + " " + this.legs[i].last_name;
+            nodes.add([
+              {id: name, label: name, cid: this.legs[i].state, group: this.legs[i].party}
+            ]);
+            if(this.legs[i].type == "rep"){
+              edges.add([
+                {from: 'House', to: name}
+              ]);
+            }else{
+              edges.add([
+                {from: 'Senate', to: name}
+              ]);
+            }
+          }
+        // create a network
+        var container = document.getElementById('mynetwork');
+        container.style.visibility = "visible";
+        // provide the data in the vis format
+        dataSet = {
+          nodes: nodes,
+          edges: edges
+        };
+        var options = {
+           // physics: false,
+          groups:{
+            Democrat: {color: {background: "blue"}},
+            Republican: {color: {background: "red"}, shape:"square"},
+            Independent: {color: {background: "yellow"}, shape:"diamond"}
+          },
+          layout:{
+            improvedLayout: false
+          }
+        };
+
+        // initialize your network!
+        network = new vis.Network(container, dataSet, options);
+      }
+    },
+    updateCluster() {
+      network.setData(dataSet);
+      var clusterOptionsByData;
+      for (var i = 0; i < this.states.length; i++){
+        var state = this.states[i];
+        var colorOpp;
+        clusterOptionsByData = {
+          joinCondition: function (childOptions) {
+            return childOptions.cid == state;
+          },
+          processProperties: function (clusterOptions, childNodes, childEdges) {
+            var totalMass = 0;
+            var numRep = 0;
+            var numDem = 0;
+            for (var j = 0; j < childNodes.length; j++){
+              if(childNodes[j].group == "Democrat"){
+                numDem++;
+              }
+              if(childNodes[j].group == "Republican"){
+                numRep++;
+              }
+              totalMass += childNodes[j].mass;
+            }
+            if(numDem < numRep){
+              colorOpp = "red";
+            }else if(numDem == numRep){
+              colorOpp = "purple";
+            }else{
+              colorOpp = "blue";
+            }
+            clusterOptions.mass = totalMass;
+            return clusterOptions;
+          },
+          clusterNodeProperties: {id: 'cluster'+state, borderWidth: 1, color: {background: colorOpp}, shape: 'database', label:"Members from "+state}
+        };
+        network.cluster(clusterOptionsByData);
+      }
+    }
   }
 }
 </script>
 <style>
+#mynetwork {
+    display: inline-block;
+    background-color: white;
+    width: 100%;
+    height: 400px;
+    border: 1px solid lightgray;
+    margin-right: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
 #citation{
   padding-left: 7.5%;
   padding-right: 7.5%;
