@@ -265,7 +265,7 @@ export default {
   }
 }
 </script>
-<style>
+<style scoped>
 #mynetwork {
     display: inline-block;
     background-color: white;

@@ -39,7 +39,7 @@
             </div>
     <body v-if="signedIn">
       <div v-if="showMap">
-              <gmap-map
+          <gmap-map
               :center="center"
               :zoom="4"
               style="height: 480px;"
@@ -66,16 +66,34 @@
           </div>
           <cg-info
           :myState="myState"
-          :myReps="myReps">
+          :myStateReps="myStateReps"
+          :favMems="favMems">
           </cg-info>
       </div>
+      <br>
+      <div id="fav" v-if="favMems.length">
+          <favorite-members
+          :favMems="favMems">
+          </favorite-members>
+      </div>
       <!-- include funky graph here @harry  -->
-      <div class="filter">
+      <!-- <div class="filter">
           filtering by important issues or by features of congress member
           <filter>
           </filter>
-      </div>
+      </div> -->
   <ideology v-if="signedIn" :houseSet="sponsoreshipH" :legs="legs" :senateSet="sponsoreshipS"></ideology>
+  <footer>
+      <h1> Stay up to date </h1>
+      <div class="row">
+          <div class="col-lg-6 col-md-6 col-sm-12">
+              <Timeline style="width:50%;margin-left: 50%;" :id="'Congressdotgov'" :sourceType="'profile'" :options="{ tweetLimit: '2' }"/>
+          </div>
+          <div class="col-lg-6 col-md-6 col-sm-12">
+              <Timeline style="width:50%;" :id="'realDonaldTrump'" :sourceType="'profile'" :options="{ tweetLimit: '2' }"/>
+          </div>
+      </div>
+  </footer>
 </body>
 
 </div>
@@ -84,11 +102,13 @@
 <script>
 import * as d3 from 'd3'
 import request from 'request';
+import Timeline from 'vue-tweet-embed/timeline'
 // import numerical from './components/numerical'
 import donations from './components/donations'
 import ideology from './components/ideology'
 import cgInfo from './components/cgInfo'
 import filter from './components/filter'
+import favoriteMembers from './components/favoriteMembers'
 
 var firebase = require('firebase');
 var vis = require('vis')
@@ -130,8 +150,8 @@ export default {
       sponsoreshipH: [],
       sponsoreshipS: [],
       center: {
-        lat: '',
-        lng: ''
+        lat: 39,
+        lng: -98
       },
       myLoc: {
           lat: '',
@@ -139,18 +159,20 @@ export default {
       },
       showMap: true,
       myState: '',
-      myReps: [],
+      myStateReps: [],
       markers: [],
       newState: '',
-      USstates: ['Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming']
+      USstates: ['Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming'],
+      favMems: []
     }
   },
   components: {
-    // wheel
     donations,
     ideology,
     cgInfo,
-    filter
+    filter,
+    favoriteMembers,
+    Timeline
   },
   mounted: function () {
     var vm = this;
@@ -301,7 +323,7 @@ methods: {
       console.log(this.numSum);
   },
   loadcgData(marker) {
-      this.myReps = [];
+      this.myStateReps = [];
       var state;
       fetch("https://maps.googleapis.com/maps/api/geocode/json?latlng="+marker.position.lat+","+marker.position.lng+"&key=AIzaSyCotQCA476JOVJ87et877SGKGFI3C840Ac").then(response => response.json())
       .then(data => {
@@ -311,10 +333,10 @@ methods: {
           console.log(this.myState.short_name);
           for (var i = 0; i < this.legs.length; i++) {
               if (this.legs[i].state == state) {
-                  this.myReps.push(this.legs[i]);
+                  this.myStateReps.push(this.legs[i]);
               }
           }
-          // console.log(this.myReps);
+          // console.log(this.myStateReps);
       })
       .catch(error => console.log(error));
   },
@@ -322,7 +344,7 @@ methods: {
       console.log(state);
       this.myState = state;
       state = this.abbrState(state, "abbr");
-      this.myReps = [];
+      this.myStateReps = [];
       var myLat;
       var myLng;
       var newMarker;
@@ -338,7 +360,7 @@ methods: {
           // );
           for (var i = 0; i < this.legs.length; i++) {
               if (this.legs[i].state == state) {
-                  this.myReps.push(this.legs[i]);
+                  this.myStateReps.push(this.legs[i]);
               }
           }
       })
@@ -471,5 +493,17 @@ body{
 }
 .errorLogin{
   color: red;
+}
+footer {
+    background-color: #fafafa;
+    padding-top: 5%;
+    padding-bottom: 10%;
+}
+footer h1 {
+    padding-bottom: 3%;
+    letter-spacing: -2px;
+    text-transform: uppercase;
+    font-weight: bold;
+    text-align: center;
 }
 </style>

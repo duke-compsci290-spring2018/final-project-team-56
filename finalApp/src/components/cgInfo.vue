@@ -4,7 +4,7 @@
 		<br>
 		<div class="row justify-content-md-center">
 			<div class="col-lg-6 members">
-				<ul v-for="(cg, index) in myReps">
+				<ul v-for="(cg, index) in myStateReps">
 					<li v-if="cg.type === 'sen'" @click="test(cg)">Senator: {{cg.first_name}} {{cg.last_name}}</li>
 					<li v-if="cg.type === 'rep'" @click="test(cg)">Rep: {{cg.first_name}} {{cg.last_name}}</li>
 				</ul>
@@ -17,8 +17,8 @@
 				<p v-if="site">Visit: <a v-bind:href="site" target="_blank">{{site}}</a></p>
 				<p v-if="twitter">Twitter: <a v-bind:href="'https://twitter.com/'+twitter" target="_blank">{{twitter}}</a></p>
 				<p v-if="fb">Facebook: <a v-bind:href="'https://facebook.com/'+fb" target="_blank">{{fb}}</a></p>
-				<!-- <p v-if="address">Address: {{address}}</p> -->
 				<p v-if="phone">Phone: {{phone}}</p>
+				<button @click="addToFavs(member)" v-if="name" class="btn btn-secondary">Add to Favorites</button>
 			</div>
 		</div>
 	</body>
@@ -29,7 +29,8 @@ export default {
     name: 'App',
     props: [
 		'myState',
-		'myReps'
+		'myStateReps',
+		'favMems'
     ],
 	data: function() {
 		return {
@@ -39,11 +40,13 @@ export default {
 			address: '',
 			phone: '',
 			twitter: '',
-			fb: ''
+			fb: '',
+			member: {}
 		};
 	},
 	methods: {
 		test(member) {
+			this.member = member;
 			this.name = member.first_name + " " + member.last_name;
 			this.party = member.party;
 			this.site = member.url;
@@ -52,6 +55,10 @@ export default {
 			this.twitter = member.twitter;
 			this.fb = member.facebook;
 			console.log(this.name);
+		},
+		addToFavs(member) {
+			this.favMems.push(member);
+			console.log(this.favMems);
 		}
 	}
 }
@@ -120,7 +127,15 @@ li {
 	margin-left: 60%;
 }
 
-li:hover {
+.members button {
+	margin-left: 10%;
+}
+
+input {
+	margin-left: 60%;
+}
+
+label:hover {
 	color: black;
 }
 
