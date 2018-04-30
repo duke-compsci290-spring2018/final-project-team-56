@@ -7,9 +7,8 @@
                 <button type="button" class="btn btn-info btn-lg" data-toggle="modal" data-target="#myModal">Login</button>
             </div>
             <div v-else>
-                <button v-on:click="load" class="btn btn-primary">Load Data</button>
-                <button v-on:click="legislatorsGraph" class="btn btn-primary" data-toggle="modal" data-target="#myModal">Network Graph</button>
-                <button v-on:click="ispDonations" class="btn btn-primary">ISP Donations</button>
+                <p>Signed in as: {{access}}</p>
+                <button v-on:click="logout" class="btn btn-outline-secondary">Logout</button>
                 <!-- <wheel></wheel> -->
                 <!-- shit goes here -->
             </div>
@@ -21,10 +20,6 @@
                     <div class="modal-content">
                         <div class="modal-header">
                             <h4 v-if="!signedIn" class="modal-title">Login</h4>
-                            <div v-if="showData">
-                                <h4 class="modal-title">Network Graph of Congress</h4>
-                                <button v-on:click="updateCluster" class="btn btn-outline-primary">Cluster by State</button>
-                            </div>
                         </div>
                         <div class="modal-body">
                           <div v-if="!signedIn" id="form">
@@ -35,7 +30,6 @@
                             <button v-on:click="guestAccess" class="btn btn-outline-primary">Guest</button>
                             <p v-if="loginError" class="errorLogin">Email and Password incorrect or exists!</p>
                           </div>
-                          <div v-if="signedIn" id="mynetwork" class="network"></div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-default closer" data-dismiss="modal">Close</button>
@@ -81,7 +75,7 @@
           <filter>
           </filter>
       </div>
-  <ideology v-if="signedIn" :houseSet="sponsoreshipH" :senateSet="sponsoreshipS"></ideology>
+  <ideology v-if="signedIn" :houseSet="sponsoreshipH" :legs="legs" :senateSet="sponsoreshipS"></ideology>
 </body>
 
 </div>
@@ -98,7 +92,9 @@ import filter from './components/filter'
 
 var firebase = require('firebase');
 var vis = require('vis')
-
+//TODO: admin features such as the log of everything that's been done - promote users to admin
+//+ delete dataset/upload dataset?
+//TODO: user features - uploading dataset to see things
 var config = {
     apiKey: "AIzaSyBGUi_589649cXRqDWCE5tIbwyN7iOYCXI",
     authDomain: "final-project-56.firebaseapp.com",
@@ -108,8 +104,6 @@ var config = {
     messagingSenderId: "919617906676"
 };
 firebase.initializeApp(config);
-var network;
-var dataSet;
 
 export default {
   name: 'App',
@@ -119,6 +113,7 @@ export default {
         {email: 'h', password: 'h', access: 'User'},
         {email: 'z', password: 'z', access: 'Admin'}
       ],
+      access: '',
       admin: false,
       guest: false,
       user: false,
@@ -131,14 +126,9 @@ export default {
       showData: false,
       email: '',
       password: '',
-      states: [],
       isp: [],
       sponsoreshipH: [],
       sponsoreshipS: [],
-      networkGraph: '',
-      data:'', //this and networkgraph are all for updating the network graph
-      nodes: '',
-      edges: '',
       center: {
         lat: '',
         lng: ''
@@ -164,7 +154,7 @@ export default {
   },
   mounted: function () {
     var vm = this;
-    d3.csv("https://raw.githubusercontent.com/duke-compsci290-spring2018/final-project-team-56/zuzu/finalApp/data/legislators-current.csv", function(data) {
+    d3.csv("https://raw.githubusercontent.com/duke-compsci290-spring2018/final-project-team-56/master/finalApp/data/legislators-current.csv", function(data) {
       vm.legs.push(data);
       console.log("done");
     });
@@ -199,6 +189,9 @@ export default {
     }
 },
 methods: {
+  logout(){
+    location.reload();
+  },
   login() {
     //determine if user or Admin
     for(var i = 0; i < this.users.length; i++){
@@ -210,6 +203,11 @@ methods: {
         this.email = '';
         this.password = '';
         this.signed();
+        if(this.admin){
+          this.access = "Admin";
+        }else{
+          this.access = "User";
+        }
       }
     }
     if(!this.signedIn){
@@ -230,25 +228,19 @@ methods: {
       "password": this.password,
       "accesss": "User"
     });
+    this.access = "User";
     this.user = true;
     this.signedIn = true;
     this.signed();
   },
   guestAccess() {
+    this.access = "Guest";
     this.guest = true;
     this.signedIn = true;
     this.signed();
   },
   signed(){
     $('#myModal').modal('toggle');
-    this.loadBar();
-  },
-  loadBar(){
-    console.log("here");
-    //var svg = d3.select("#congressIdeology").append("svg:svg")
-                                // .attr("height", "400px")
-                                // .attr("width", "50%");
-
   },
   load() {
     var vm = this;
@@ -289,17 +281,6 @@ methods: {
         }
     }
   },
-  getLocation() {
-      console.log(this.legs[0]);
-      // request("https://ipinfo.io", function(error, response, body) {
-      //   console.log(JSON.stringify(response, null, 4));
-      //   // console.log(JSON.parse(body));
-      //   // console.log("city " + response.city);
-      //   // console.log("state " + response.region)
-      // }, "jsonp");
-      //console.log(this.legs[0]);
-      //firebase.database().ref("legs").set(this.legs);
-  },
   calculateAge(birthday) { // birthday is a date
       var ageDifMs = Date.now() - birthday;
       var ageDate = new Date(ageDifMs); // miliseconds from epoch
@@ -318,106 +299,6 @@ methods: {
       // numSum is array of objects: mean, med, etc.
       this.numSum.push(temp);
       console.log(this.numSum);
-  },
-  legislatorsGraph(){
-    if(!this.showData){
-      this.showData = true;
-      var nodes = new vis.DataSet([
-        {id: 'Congress', label: 'Congress'},
-        {id: 'House', label: 'House'},
-        {id: 'Senate', label: 'Senate'}
-      ]);
-
-      // create an array with edges
-      var edges = new vis.DataSet([
-        {from: 'Congress', to: 'House'},
-        {from: 'Congress', to: 'Senate'}
-      ]);
-
-        for (var i = 0; i < this.legs.length; i++){
-          if(this.states.indexOf(this.legs[i].state)==-1){
-            this.states.push(this.legs[i].state);
-          }
-          var name = this.legs[i].first_name + " " + this.legs[i].last_name;
-          nodes.add([
-            {id: name, label: name, cid: this.legs[i].state, group: this.legs[i].party}
-          ]);
-          if(this.legs[i].type == "rep"){
-            edges.add([
-              {from: 'House', to: name}
-            ]);
-          }else{
-            edges.add([
-              {from: 'Senate', to: name}
-            ]);
-          }
-        }
-      // create a network
-      var container = document.getElementById('mynetwork');
-      container.style.visibility = "visible";
-      // provide the data in the vis format
-      dataSet = {
-        nodes: nodes,
-        edges: edges
-      };
-      var options = {
-         // physics: false,
-        groups:{
-          Democrat: {color: {background: "blue"}},
-          Republican: {color: {background: "red"}, shape:"square"},
-          Independent: {color: {background: "yellow"}, shape:"diamond"}
-        },
-        layout:{
-          improvedLayout: false
-        }
-      };
-
-      // initialize your network!
-      network = new vis.Network(container, dataSet, options);
-    }
-  },
-  updateCluster() {
-    network.setData(dataSet);
-    var clusterOptionsByData;
-    for (var i = 0; i < this.states.length; i++){
-      var state = this.states[i];
-      var colorOpp;
-      clusterOptionsByData = {
-        joinCondition: function (childOptions) {
-          return childOptions.cid == state;
-        },
-        processProperties: function (clusterOptions, childNodes, childEdges) {
-          var totalMass = 0;
-          var numRep = 0;
-          var numDem = 0;
-          for (var j = 0; j < childNodes.length; j++){
-            if(childNodes[j].group == "Democrat"){
-              numDem++;
-            }
-            if(childNodes[j].group == "Republican"){
-              numRep++;
-            }
-            totalMass += childNodes[j].mass;
-          }
-          if(numDem < numRep){
-            colorOpp = "red";
-          }else if(numDem == numRep){
-            colorOpp = "purple";
-          }else{
-            colorOpp = "blue";
-          }
-          clusterOptions.mass = totalMass;
-          return clusterOptions;
-        },
-        clusterNodeProperties: {id: 'cluster'+state, borderWidth: 1, color: {background: colorOpp}, shape: 'database', label:"Members from "+state}
-      };
-      network.cluster(clusterOptionsByData);
-    }
-  },
-  ispDonations() {
-    console.log('hi');
-    //saving isp dataset to firebase
-    //firebase.database().ref("isp").set(this.isp);
   },
   loadcgData(marker) {
       this.myReps = [];
@@ -544,7 +425,7 @@ header{
     padding-top: 12.5%;
     padding-bottom: 12.5%;
     background-color: #fafafa;
-    height: 60vh;
+    height: 75vh;
 }
 header h1{
     padding-bottom: 3%;
@@ -556,17 +437,6 @@ header h3{
     padding-bottom: 3%;
     font-weight: lighter;
     font-size: 90%;
-}
-#mynetwork {
-    display: inline-block;
-    background-color: white;
-    width: 100%;
-    height: 400px;
-    border: 1px solid lightgray;
-    margin-right: 0;
-    margin: 0;
-    padding: 0;
-    border: 0;
 }
 #app {
     font-family: 'Avenir', Helvetica, Arial, sans-serif;
