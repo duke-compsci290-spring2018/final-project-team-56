@@ -8,8 +8,9 @@
 					<li v-if="cg.type === 'sen'" @click="test(cg)">Senator: {{cg.first_name}} {{cg.last_name}}</li>
 					<li v-if="cg.type === 'rep'" @click="test(cg)">Rep: {{cg.first_name}} {{cg.last_name}}</li>
 				</ul>
+				<button @click="addAll" v-if="user" class="btn btn-secondary">Add All to Favorites</button>
 			</div>
-			<div class="col-lg-6 members">
+			<div class="col-lg-6 box">
 				<!-- add in here -->
 				<h3 v-if="party === 'Democrat'" style="color:#46A0EF;">{{name}}</h3>
 				<h3 v-if="party === 'Republican'" style="color:#EF4667;">{{name}}</h3>
@@ -18,19 +19,23 @@
 				<p v-if="twitter">Twitter: <a v-bind:href="'https://twitter.com/'+twitter" target="_blank">{{twitter}}</a></p>
 				<p v-if="fb">Facebook: <a v-bind:href="'https://facebook.com/'+fb" target="_blank">{{fb}}</a></p>
 				<p v-if="phone">Phone: {{phone}}</p>
-				<button @click="addToFavs(member)" v-if="name" class="btn btn-secondary">Add to Favorites</button>
+				<button @click="addToFavs(member)" v-if="user && name" class="btn btn-secondary">Add to Favorites</button>
 			</div>
 		</div>
 	</body>
 </template>
 
 <script>
+var firebase = require('firebase');
+
 export default {
     name: 'App',
     props: [
+		'id',
 		'myState',
 		'myStateReps',
-		'favMems'
+		'favMems',
+		'user'
     ],
 	data: function() {
 		return {
@@ -45,6 +50,9 @@ export default {
 		};
 	},
 	methods: {
+		setFireBase(key, val){
+      firebase.database().ref("/"+key).set(val);
+    },
 		test(member) {
 			this.member = member;
 			this.name = member.first_name + " " + member.last_name;
@@ -54,11 +62,28 @@ export default {
 			this.phone = member.phone;
 			this.twitter = member.twitter;
 			this.fb = member.facebook;
-			console.log(this.name);
 		},
 		addToFavs(member) {
-			this.favMems.push(member);
+			console.log(member);
+			var dontpush = false;
+			for (var i = 0; i < this.favMems.length; i++) {
+				if (this.favMems[i] == member) {
+					dontpush = true;
+				}
+			}
+			if (!dontpush) {
+				this.favMems.push(member);
+				this.setFireBase(this.id+"favMems", this.favMems);
+			}
 			console.log(this.favMems);
+		},
+		addAll() {
+			for (var j = 0; j < this.myStateReps.length; j++) {
+				if(this.favMems.indexOf(this.myStateReps[j]) == -1){
+					this.favMems.push(this.myStateReps[j]);
+				}
+			}
+			this.setFireBase(this.id+"favMems", this.favMems);
 		}
 	}
 }
@@ -90,7 +115,7 @@ h2, h4 {
 	text-transform: uppercase;
 }
 
-.members h3 {
+.box h3 {
 	font-family: 'Avenir', Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -99,12 +124,16 @@ h2, h4 {
 	margin-left: 10%;
 }
 
-.members p {
+.box p {
 	font-family: 'Avenir', Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     color: #2c3e50;
 	font-size: 15px;
+	margin-left: 10%;
+}
+
+.box button {
 	margin-left: 10%;
 }
 
@@ -128,7 +157,7 @@ li {
 }
 
 .members button {
-	margin-left: 10%;
+	margin-left: 63%;
 }
 
 input {

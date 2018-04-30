@@ -78,16 +78,6 @@
 <script>
 import * as d3 from 'd3'
 var firebase = require('firebase');
-//
-// var config = {
-//     apiKey: "AIzaSyBGUi_589649cXRqDWCE5tIbwyN7iOYCXI",
-//     authDomain: "final-project-56.firebaseapp.com",
-//     databaseURL: "https://final-project-56.firebaseio.com",
-//     projectId: "final-project-56",
-//     storageBucket: "final-project-56.appspot.com",
-//     messagingSenderId: "919617906676"
-// };
-// firebase.initializeApp(config);
 
 export default {
   name: 'user',
