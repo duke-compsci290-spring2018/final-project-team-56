@@ -8,7 +8,7 @@
 					<li v-if="cg.type === 'sen'" @click="test(cg)">Senator: {{cg.first_name}} {{cg.last_name}}</li>
 					<li v-if="cg.type === 'rep'" @click="test(cg)">Rep: {{cg.first_name}} {{cg.last_name}}</li>
 				</ul>
-				<button @click="addAll" v-if="user" class="btn btn-secondary">Add All to Favorites</button>
+				<button @click="addAll" v-if="user || admin" class="btn btn-secondary">Add All to Favorites</button>
 			</div>
 			<div class="col-lg-6 box">
 				<!-- add in here -->
@@ -19,7 +19,7 @@
 				<p v-if="twitter">Twitter: <a v-bind:href="'https://twitter.com/'+twitter" target="_blank">{{twitter}}</a></p>
 				<p v-if="fb">Facebook: <a v-bind:href="'https://facebook.com/'+fb" target="_blank">{{fb}}</a></p>
 				<p v-if="phone">Phone: {{phone}}</p>
-				<button @click="addToFavs(member)" v-if="user && name" class="btn btn-secondary">Add to Favorites</button>
+				<button @click="addToFavs(member)" v-if="(user || admin)&& name" class="btn btn-secondary">Add to Favorites</button>
 			</div>
 		</div>
 	</body>
@@ -31,11 +31,13 @@ var firebase = require('firebase');
 export default {
     name: 'App',
     props: [
+		'admin',
 		'id',
 		'myState',
 		'myStateReps',
 		'favMems',
-		'user'
+		'user',
+		'logs'
     ],
 	data: function() {
 		return {
@@ -74,6 +76,8 @@ export default {
 			if (!dontpush) {
 				this.favMems.push(member);
 				this.setFireBase(this.id+"favMems", this.favMems);
+				this.logs.push(this.id+" added "+member+" to favorite members at "+Date());
+	      this.setFireBase("logs", this.logs);
 			}
 			console.log(this.favMems);
 		},
@@ -84,6 +88,8 @@ export default {
 				}
 			}
 			this.setFireBase(this.id+"favMems", this.favMems);
+			this.logs.push(this.id+" added all state members to favorite members at "+Date());
+			this.setFireBase("logs", this.logs);
 		}
 	}
 }

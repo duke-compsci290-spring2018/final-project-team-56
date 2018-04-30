@@ -95,7 +95,8 @@ export default {
     'admin',
     'masterSet',
     'personalSet',
-    'id'
+    'id',
+    'logs'
   ],
   methods: {
     setFireBase(key, val){
@@ -105,17 +106,23 @@ export default {
       var num = this.masterSet.indexOf(dset);
       this.masterSet.splice(num, 1);
       this.setFireBase("datasets", this.masterSet);
+      this.logs.push(this.id+" removed dataset "+dset.name+" from master at "+Date());
+      this.setFireBase("logs", this.logs);
     },
     moveMaster(dset){
       this.masterSet.push(dset);
       this.setFireBase("datasets", this.masterSet);
+      this.logs.push(this.id+" moved dataset "+dset.name+" to master at "+Date());
+      this.setFireBase("logs", this.logs);
       //setFireBase
       this.remove(dset);
     },
     remove(dset){
       var num = this.personalSet.indexOf(dset);
       this.personalSet.splice(num, 1);
-      this.setFireBase(id+"database", this.personalSet);
+      this.setFireBase(this.id+"database", this.personalSet);
+      this.logs.push(this.id+" removed dataset "+dset.name+" from personal dataset at "+Date());
+      this.setFireBase("logs", this.logs);
     },
     addedVar(header, type){
       if(type == "num"){
@@ -253,6 +260,8 @@ export default {
           name: filename,
           data: vm.$tester});
           vm.setFireBase(vm.id+"database", vm.personalSet);
+          vm.logs.push(vm.id + " added a personal dataset " + filename + " at time " + Date());
+          vm.setFireBase("logs", vm.logs);
         }
         reader.readAsText(files[0]);
         //push file to firebase later on

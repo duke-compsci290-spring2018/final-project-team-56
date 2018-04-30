@@ -65,11 +65,13 @@
               </ul>
           </div>
           <cg-info
+          :logs="logs"
           :id="id"
           :myState="myState"
           :myStateReps="myStateReps"
           :favMems="favMems"
-          :user="user">
+          :user="user"
+          :admin="admin">
           </cg-info>
       </div>
       <br>
@@ -84,7 +86,7 @@
       </div>
 
   <ideology :houseSet="sponsoreshipH" :legs="legs" :senateSet="sponsoreshipS"></ideology>
-  <user v-if="user || admin" :id="id" :admin="admin" :masterSet="masterSet" :personalSet="personalSet"></user>
+  <user v-if="user || admin" :logs="logs" :id="id" :admin="admin" :masterSet="masterSet" :personalSet="personalSet"></user>
 
   <footer>
       <h1> Stay up to date </h1>
@@ -97,6 +99,12 @@
           </div>
       </div>
   </footer>
+  <div v-if="admin">
+    <h4>View Logs</h4>
+    <ul>
+      <li v-for="item in logs">{{item}}</li>
+    </ul>
+  </div>
 </body>
 
 </div>
@@ -143,6 +151,7 @@ export default {
       guest: false,
       user: false,
       legs: [],
+      logs: [],
       loginError: false,
       categorical: [],
       numerical: [],
@@ -189,6 +198,11 @@ export default {
         vm.users = [];
         for (var i = 0; i < data.users.length; i++){
           vm.users.push(data.users[i]);
+        }
+      }
+      if("logs" in data){
+        for (var i = 0; i < data.logs.length; i++){
+          vm.logs.push(data.logs[i]);
         }
       }
       if("datasets" in data){
@@ -288,6 +302,8 @@ methods: {
       "id": this.count
     });
     this.setFireBase("users", this.users);
+    this.logs.push("Added new user id: " + this.id + " at "+ Date());
+    this.setFireBase("logs", this.logs);
     this.count++;
     this.setFireBase("count", this.count);
     this.access = "User";
@@ -470,7 +486,9 @@ methods: {
   },
   clearFavorites() {
       this.favMems = [];
-      this.setFireBase(id+"favMems", this.favMems);
+      this.setFireBase(this.id+"favMems", this.favMems);
+      this.logs.push(this.id + " Cleared favorite members at " + Date());
+      this.setFireBase("logs", this.logs);
   },
   }
 }
