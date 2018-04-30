@@ -83,6 +83,8 @@
           </filter>
       </div> -->
   <ideology v-if="signedIn" :houseSet="sponsoreshipH" :legs="legs" :senateSet="sponsoreshipS"></ideology>
+  <user v-if="user" :masterSet="masterSet" :personalSet="personalSet"></user>
+
   <footer>
       <h1> Stay up to date </h1>
       <div class="row">
@@ -109,6 +111,7 @@ import ideology from './components/ideology'
 import cgInfo from './components/cgInfo'
 import filter from './components/filter'
 import favoriteMembers from './components/favoriteMembers'
+import user from './components/user'
 
 var firebase = require('firebase');
 var vis = require('vis')
@@ -133,6 +136,8 @@ export default {
         {email: 'h', password: 'h', access: 'User'},
         {email: 'z', password: 'z', access: 'Admin'}
       ],
+      masterSet: [],//isp and stuff would be added
+      personalSet: [{name:'set1', data:[1,2,3]}],
       access: '',
       admin: false,
       guest: false,
@@ -167,6 +172,8 @@ export default {
     }
   },
   components: {
+    // wheel
+    user,
     donations,
     ideology,
     cgInfo,
