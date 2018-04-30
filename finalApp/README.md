@@ -28,9 +28,11 @@ Date started: 4/14/18
 
 Date completed: 4/30/18
 
-Hours spent: 34
+Hours spent: 55
 
 Students discussed assignment with: None
+
+Commit at: 10:46 am was to change a two lines where a variable was written as "accesss" instead of "access".
 
 Resources:
 *https://www.w3schools.com/html/html5_geolocation.asp
@@ -48,11 +50,10 @@ Extra credit: N/A
 
 Total technologies used: d3.js, Google Maps API, Node, Vue, Twitter API, vis.js, Plotly
 
-Built-in datasets used from: 
+Built-in datasets used from:
 *https://www.govtrack.us/
 *https://www.kaggle.com/mrpantherson/isp-contributions-to-congress-1
 
 Frameworks used:
 Vue was definitely a framework we wanted to use especially as it was the most familiar one and would help us develop an application efficiently.
 We used a combination of different libraries for data visualization and graphing because we both used different libraries when doing our explore projects and became familiar with our separate libraries. We tried our best to overlap where we could. The remaining packages that we used were because they had extensive documentation and were more maintained regularly: i.e. Google Maps API.
-
