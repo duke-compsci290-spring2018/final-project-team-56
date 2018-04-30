@@ -82,8 +82,8 @@
           <filter>
           </filter>
       </div> -->
-  <ideology v-if="signedIn" :houseSet="sponsoreshipH" :legs="legs" :senateSet="sponsoreshipS"></ideology>
-  <user v-if="user" :masterSet="masterSet" :personalSet="personalSet"></user>
+  <ideology :houseSet="sponsoreshipH" :legs="legs" :senateSet="sponsoreshipS"></ideology>
+  <user v-if="user || admin" :id="id" :admin="admin" :masterSet="masterSet" :personalSet="personalSet"></user>
 
   <footer>
       <h1> Stay up to date </h1>
@@ -115,9 +115,7 @@ import user from './components/user'
 
 var firebase = require('firebase');
 var vis = require('vis')
-//TODO: admin features such as the log of everything that's been done - promote users to admin
-//+ delete dataset/upload dataset?
-//TODO: user features - uploading dataset to see things
+
 var config = {
     apiKey: "AIzaSyBGUi_589649cXRqDWCE5tIbwyN7iOYCXI",
     authDomain: "final-project-56.firebaseapp.com",
@@ -132,12 +130,14 @@ export default {
   name: 'App',
   data() {
     return {
-      users: [
-        {email: 'h', password: 'h', access: 'User'},
-        {email: 'z', password: 'z', access: 'Admin'}
-      ],
+      users: [],
+      //   {email: 'h', password: 'h', access: 'User', id: 0},
+      //   {email: 'z', password: 'z', access: 'Admin', id: 1}
+      // ],
+      count: 2,
+      id: -1,
       masterSet: [],//isp and stuff would be added
-      personalSet: [{name:'set1', data:[1,2,3]}],
+      personalSet: [],//[{name:'set1', data:[1,2,3]}],
       access: '',
       admin: false,
       guest: false,
@@ -183,22 +183,35 @@ export default {
   },
   mounted: function () {
     var vm = this;
-    d3.csv("https://raw.githubusercontent.com/duke-compsci290-spring2018/final-project-team-56/master/finalApp/data/legislators-current.csv", function(data) {
-      vm.legs.push(data);
-      console.log("done");
-    });
-    d3.csv("https://raw.githubusercontent.com/duke-compsci290-spring2018/final-project-team-56/master/finalApp/data/congress_isp_donations.csv", function(data){
-      vm.isp.push(data);
-      console.log("isp");
-    });
-    d3.csv("https://raw.githubusercontent.com/duke-compsci290-spring2018/final-project-team-56/master/finalApp/data/sponsorshipanalysis_h.csv", function(data){
-      vm.sponsoreshipH.push(data);
-      console.log("sponsH");
-    });
-    d3.csv("https://raw.githubusercontent.com/duke-compsci290-spring2018/final-project-team-56/master/finalApp/data/sponsorshipanalysis_s.csv", function(data){
-      vm.sponsoreshipS.push(data);
-      console.log("sponsS");
-    });
+    var db = firebase.database();
+    function getData(snapshot){
+      var data = snapshot.val();
+      if("users" in data){
+        vm.users = [];
+        for (var i = 0; i < data.users.length; i++){
+          vm.users.push(data.users[i]);
+        }
+      }
+      if("datasets" in data){
+        vm.masterSet = [];
+        for (var i = 0; i < data.datasets.length; i++){
+          vm.masterSet.push(data.datasets[i]);
+          if(data.datasets[i].name == "legs"){
+            vm.legs = data.datasets[i].data;
+          }
+          if(data.datasets[i].name == "ideoSenate"){
+            vm.sponsoreshipH = data.datasets[i].data;
+          }
+          if(data.datasets[i].name == "ideoHouse"){
+            vm.sponsoreshipS = data.datasets[i].data;
+          }
+        }
+      }
+      //grab that users dataset and also their favMems
+      db.ref("/").off("value", getData);
+    }
+    db.ref("/").on("value", getData);
+
     // Get location of user
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(function(position) {
@@ -216,8 +229,12 @@ export default {
     } else {
         console.log("Geolocation is not supported by browser");
     }
+
 },
 methods: {
+  setFireBase(key, val){
+    firebase.database().ref("/"+key).set(val);
+  },
   logout(){
     location.reload();
   },
@@ -231,7 +248,16 @@ methods: {
         this.user = (this.users[i].access == "User");
         this.email = '';
         this.password = '';
+        this.id = this.users[i].id;
         this.signed();
+        var vm = this
+        firebase.database().ref('/' + this.id+'database').once('value').then(function(snapshot) {
+          if(snapshot.val() != null){
+            vm.personalSet = snapshot.val();
+          }
+        });
+        
+
         if(this.admin){
           this.access = "Admin";
         }else{
@@ -255,8 +281,12 @@ methods: {
     this.users.push({
       "email": this.email,
       "password": this.password,
-      "accesss": "User"
+      "accesss": "User",
+      "id": this.count
     });
+    this.setFireBase("users", this.users);
+    this.count++;
+    this.setFireBase("count", this.count);
     this.access = "User";
     this.user = true;
     this.signedIn = true;
@@ -440,7 +470,6 @@ methods: {
 </script>
 
 <style>
-@import url(http://fonts.googleapis.com/css?family=Roboto);
 .vue-map-container{
     width: 100%;
 }
@@ -454,7 +483,7 @@ header{
     padding-top: 12.5%;
     padding-bottom: 12.5%;
     background-color: #fafafa;
-    height: 75vh;
+    height: 100vh;
 }
 header h1{
     padding-bottom: 3%;

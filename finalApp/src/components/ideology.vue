@@ -1,29 +1,29 @@
 <template>
-  <div id="main">
-    <h1>Ideologies of the Members of Congress by Chamber</h1>
+<div id="main">
+  <h1>Ideologies of the Members of Congress by Chamber</h1>
     <div class="row">
       <div class="col-lg-6 col-md-6 col-sm-12 textbody">
         <h3>Ideology Analysis</h3>
         <p>The ideology analysis in place here is a score on how liberal-conservative each Member of Congress is based on his or her pattern of bill cosponsorship.<p>
         <p>In essence, each Member of Congress who cosponsors similar bills will get have scores that are similar, and members who sponsor different bills
-          will have more contrasting scores. This relies on members that have similar political views to cosponsor the the same set of bills or bills by the same
-          set of authors. Conversely, members with different political views would be more likely to cosponsor different bills.</p>
+        will have more contrasting scores. This relies on members that have similar political views to cosponsor the the same set of bills or bills by the same
+        set of authors. Conversely, members with different political views would be more likely to cosponsor different bills.</p>
         <p>The charts on the right plot the ideology score against the leadership score, where leadership is determined by the number of bills sponsored. Looking at the
-          extremes shows, for instance, that Senator Jim Inhofe appears to be an extreme Republican in the Senate chart and he is indeed regarded as one of the most
-          conservative senators.</p>
+        extremes shows, for instance, that Senator Jim Inhofe appears to be an extreme Republican in the Senate chart and he is indeed regarded as one of the most
+        conservative senators.</p>
         <p>What is fascinating about the plot is the huge disparity and polarization that has begun to take hold within the modern political sphere. When looking at
-          similar charts from Congress years ago, we see less of a clear divide between political parties. Overall, this shows that modern politics has become more
-          segregated into specific political ideologies especially as there are only two Independents within Congress. Both of whom are in the Senate.</p>
+        similar charts from Congress years ago, we see less of a clear divide between political parties. Overall, this shows that modern politics has become more
+        segregated into specific political ideologies especially as there are only two Independents within Congress. Both of whom are in the Senate.</p>
         <h3>Methodology, Dataset, and Citations</h3>
         <p>The ideology scores were computed through an analysis called Principle Component Analysis and the leadership scores were computed through scraping and page
-          rank analysis. More information about how this was completed is cited here.</p>
-          <p id="citation">GovTrack.us. 2013. Leadership Analysis of Members of Congress. Accessed at <a href="https://www.govtrack.us/about/analysis">https://www.govtrack.us/about/analysis</a>.</p>
+        rank analysis. More information about how this was completed is cited here.</p>
+        <p id="citation">GovTrack.us. 2013. Leadership Analysis of Members of Congress. Accessed at <a href="https://www.govtrack.us/about/analysis">https://www.govtrack.us/about/analysis</a>.</p>
         <p>Datasets: <a href="https://raw.githubusercontent.com/duke-compsci290-spring2018/final-project-team-56/master/finalApp/data/sponsorshipanalysis_h.csv">House</a>
-          <a href="https://raw.githubusercontent.com/duke-compsci290-spring2018/final-project-team-56/master/finalApp/data/sponsorshipanalysis_s.csv">Senate</a></p>
-          <p>Click the button below to view all the Members of Congress on a network graph.</p>
-          <button v-on:click="legislatorsGraph" class="btn btn-primary" id="networkToggle" data-toggle="modal" data-target="#myModal2">Network Graph</button>
-          <p>Click the button below to view the graph above but with the ideology and leadership scores.</p>
-          <button v-on:click="congressGraph" class="btn btn-primary" id="networkToggle" data-toggle="modal" data-target="#myModal2">Weighted Graph</button>
+        <a href="https://raw.githubusercontent.com/duke-compsci290-spring2018/final-project-team-56/master/finalApp/data/sponsorshipanalysis_s.csv">Senate</a></p>
+        <p>Click the button below to view all the Members of Congress on a network graph.</p>
+        <button v-on:click="legislatorsGraph" class="btn btn-primary" id="networkToggle" data-toggle="modal" data-target="#myModal2">Network Graph</button>
+        <p>Click the button below to view the graph above but with the ideology and leadership scores.</p>
+        <button v-on:click="congressGraph" class="btn btn-primary" id="networkToggle" data-toggle="modal" data-target="#myModal2">Weighted Graph</button>
       </div>
       <div class="col-lg-6 col-md-6 col-sm-12">
         <div id="myDiv"></div>
@@ -32,22 +32,22 @@
     </div>
     <!--  Modal -->
     <div class="modal fade" id="myModal2" role="dialog">
-        <div class="modal-dialog">
-            <!-- Modal content-->
-            <div class="modal-content">
-                <div class="modal-header">
-                        <h4 class="modal-title">Network Graph of Congress</h4>
-                </div>
-                <div class="modal-body">
-                  <div id="mynetwork" class="network"></div>
-                </div>
-                <div class="modal-footer">
-                    <button v-if="showData" v-on:click="updateCluster" class="btn btn-outline-primary">Cluster by State</button>
-                    <button type="button" class="btn btn-default closer" data-dismiss="modal">Close</button>
-                    <p>{{type}}</p>
-                </div>
-            </div>
+      <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title">Network Graph of Congress</h4>
+          </div>
+          <div class="modal-body">
+            <div id="mynetwork" class="network"></div>
+          </div>
+          <div class="modal-footer">
+            <button v-if="showData" v-on:click="updateCluster" class="btn btn-outline-primary">Cluster by State</button>
+            <button type="button" class="btn btn-default closer" data-dismiss="modal">Close</button>
+            <p>{{type}}</p>
+          </div>
         </div>
+      </div>
     </div>
   </div>
 
@@ -128,10 +128,6 @@ export default {
         trace2.x.push(parseFloat(this.houseSet[i][" ideology"]));
         trace2.y.push(parseFloat(this.houseSet[i][" leadership"]));
         trace2.text.push(this.houseSet[i][" name"]);
-      }else {
-        trace3.x.push(parseFloat(this.houseSet[i][" ideology"]));
-        trace3.y.push(parseFloat(this.houseSet[i][" leadership"]));
-        trace3.text.push(this.houseSet[i][" name"]);
       }
     }
 
@@ -163,11 +159,11 @@ export default {
         range: [0, 1.05],
         title: "Leadership"
       },
-      title:'Ideology vs Leadership in the House'
+      title:'Ideology vs Leadership in the House (115)'
     };
 
     Plotly.newPlot('myDiv', data, layout);
-    layout.title = 'Ideology vs Leadership in the Senate';
+    layout.title = 'Ideology vs Leadership in the Senate (115)';
     Plotly.newPlot('senateDiv', data2, layout);
   },
   methods: {
@@ -211,7 +207,9 @@ export default {
           nodes:{
             shape: 'dot',
           },
-           // physics: false,
+          physics: {
+            stabilization: false
+          },
           groups:{
             ' Democrat': {color: {background: "blue"}},
             ' Republican': {color: {background: "red"}},
@@ -241,24 +239,24 @@ export default {
           {from: 'Congress', to: 'Senate'}
         ]);
 
-          for (var i = 0; i < this.legs.length; i++){
-            if(this.states.indexOf(this.legs[i].state)==-1){
-              this.states.push(this.legs[i].state);
-            }
-            var name = this.legs[i].first_name + " " + this.legs[i].last_name;
-            nodes.add([
-              {id: name, label: name, cid: this.legs[i].state, group: this.legs[i].party}
-            ]);
-            if(this.legs[i].type == "rep"){
-              edges.add([
-                {from: 'House', to: name}
-              ]);
-            }else{
-              edges.add([
-                {from: 'Senate', to: name}
-              ]);
-            }
+        for (var i = 0; i < this.legs.length; i++){
+          if(this.states.indexOf(this.legs[i].state)==-1){
+            this.states.push(this.legs[i].state);
           }
+          var name = this.legs[i].first_name + " " + this.legs[i].last_name;
+          nodes.add([
+            {id: name, label: name, cid: this.legs[i].state, group: this.legs[i].party}
+          ]);
+          if(this.legs[i].type == "rep"){
+            edges.add([
+              {from: 'House', to: name}
+            ]);
+          }else{
+            edges.add([
+              {from: 'Senate', to: name}
+            ]);
+          }
+        }
         // create a network
         var container = document.getElementById('mynetwork');
         container.style.visibility = "visible";
@@ -271,7 +269,9 @@ export default {
           nodes:{
             shape: 'dot',
           },
-           // physics: false,
+          physics: {
+            stabilization: false
+          },
           groups:{
             Democrat: {color: {background: "blue"}},
             Republican: {color: {background: "red"}, shape:"square"},
@@ -339,6 +339,12 @@ export default {
 }
 </script>
 <style scoped>
+h1, h3, p{
+  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #2c3e50;
+}
 .modal-title{
   text-align: center;
 }
@@ -350,15 +356,15 @@ export default {
   padding-bottom: 5%;
 }
 #mynetwork {
-    display: inline-block;
-    background-color: white;
-    width: 100%;
-    height: 400px;
-    border: 1px solid lightgray;
-    margin-right: 0;
-    margin: 0;
-    padding: 0;
-    border: 0;
+  display: inline-block;
+  background-color: white;
+  width: 100%;
+  height: 400px;
+  border: 1px solid lightgray;
+  margin-right: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 #citation{
   padding-left: 7.5%;
