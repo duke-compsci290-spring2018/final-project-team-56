@@ -217,6 +217,9 @@ export default {
           },
           layout:{
             improvedLayout: false
+        },
+          physics:{
+               stabilization: false
           }
         };
 

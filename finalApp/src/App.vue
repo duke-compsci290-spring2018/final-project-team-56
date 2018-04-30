@@ -67,21 +67,20 @@
           <cg-info
           :myState="myState"
           :myStateReps="myStateReps"
-          :favMems="favMems">
+          :favMems="favMems"
+          :user="user">
           </cg-info>
       </div>
       <br>
       <div id="fav" v-if="favMems.length">
+          <div class="row justify-content-center">
+              <button @click="clearFavorites" class="btn btn-light">Clear Favorites</button>
+        </div>
+          <br>
           <favorite-members
           :favMems="favMems">
           </favorite-members>
       </div>
-      <!-- include funky graph here @harry  -->
-      <!-- <div class="filter">
-          filtering by important issues or by features of congress member
-          <filter>
-          </filter>
-      </div> -->
   <ideology v-if="signedIn" :houseSet="sponsoreshipH" :legs="legs" :senateSet="sponsoreshipS"></ideology>
   <footer>
       <h1> Stay up to date </h1>
@@ -107,7 +106,6 @@ import Timeline from 'vue-tweet-embed/timeline'
 import donations from './components/donations'
 import ideology from './components/ideology'
 import cgInfo from './components/cgInfo'
-import filter from './components/filter'
 import favoriteMembers from './components/favoriteMembers'
 
 var firebase = require('firebase');
@@ -170,7 +168,6 @@ export default {
     donations,
     ideology,
     cgInfo,
-    filter,
     favoriteMembers,
     Timeline
   },
@@ -267,19 +264,19 @@ methods: {
   load() {
     var vm = this;
     var cols = [];
-    var entries = d3.entries(vm.legs[0]);       // considering first entry only for column names
+    var entries = d3.entries(vm.isp[0]);       // considering first entry only for column names
     for (var k = 0; k < entries.length; k++) {
         cols.push(entries[k].key); // column name
         // how to interpret birthdays -- specific to legs
-        if (entries[k].key == "birthday") {
-            var birthday = Date.parse(entries[k].value);
-            var age = this.calculateAge(birthday);
-            entries[k].value = age;
-        }
+        // if (entries[k].key == "birthday") {
+        //     var birthday = Date.parse(entries[k].value);
+        //     var age = this.calculateAge(birthday);
+        //     entries[k].value = age;
+        // }
         if (isNaN(entries[k].value)) {  // string --> categorical
-            this.categorical.push(entries[k]);
+            this.categorical.push(entries[k].key);
         } else {
-            this.numerical.push(entries[k]);
+            this.numerical.push(entries[k].key);
         }
     }/*
     for (var i = 0; i < this.categorical.length; i++) {
@@ -427,7 +424,10 @@ methods: {
               return(states[i][1]);
           }
       }
-  }
+  },
+  clearFavorites() {
+      this.favMems = [];
+  },
   }
 }
 </script>
@@ -476,9 +476,6 @@ header h3{
 body{
     margin: 0;
 }
-.filter {
-    background-color: #fafafa;
-}
 .modal-body{
     justify-content: center;
     padding: 0;
@@ -505,5 +502,8 @@ footer h1 {
     text-transform: uppercase;
     font-weight: bold;
     text-align: center;
+}
+.fav {
+    margin: 0 auto;
 }
 </style>
